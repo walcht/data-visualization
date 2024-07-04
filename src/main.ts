@@ -1,5 +1,6 @@
 import { datasetImporter } from "./importer/datasetImporter";
 import { MapVisualization } from "./map-visualization/MapVisualization";
+import { groupByYears } from "./preprocessing/groupByYears";
 
 const mapContainer = document.querySelector("#map-container") as HTMLDivElement;
 if (mapContainer == null) {
@@ -15,20 +16,20 @@ const importBtn = document.querySelector("#import-btn") as HTMLButtonElement;
 if (importBtn == null) {
   throw new Error("couldn't find the import button");
 }
-const mapCanvas = mapContainer.querySelector("canvas");
-if (mapCanvas == null) {
-    throw new Error("couldn't find the map canvas");
+const yearInput = document.querySelector(
+  "#timestamp-player-range-input"
+) as HTMLInputElement;
+if (yearInput == null) {
+  throw new Error(
+    "couldn't find the timestamp (year) range input. Aborting ..."
+  );
 }
+const mapVisualization = new MapVisualization(mapContainer);
 importBtn.addEventListener("click", async () => {
-    if (!csvDatasetImporter.files?.length) {
-        return;
-    }
-    const accidentsData = await datasetImporter(csvDatasetImporter.files[0]);
-    console.log(accidentsData);
-    new MapVisualization(mapCanvas, accidentsData.map((v) => {return {
-        coordinates: [v.longitude, v.latitude],
-        casualties: v.nbrOfCasualties,
-        severity: Math.floor(v.accidentSeverity * 255 / 3),
-        nbrVehicles: v.nbrOfVehicles,
-    }}));
+  if (!csvDatasetImporter.files?.length) {
+    return;
+  }
+  const accidentsData = await datasetImporter(csvDatasetImporter.files[0]);
+  const accidentsDataYearly = groupByYears(accidentsData);
+  // mapVisualization.update(accidentsDataYearly.get(2013)!);
 });

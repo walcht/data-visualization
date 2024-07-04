@@ -1,61 +1,119 @@
-import { Deck } from "@deck.gl/core";
-import { TileLayer } from "@deck.gl/geo-layers";
-import { BitmapLayer, ScatterplotLayer } from "@deck.gl/layers";
+import { AccidentData } from "../interfaces/AccidentData";
+import { Selection, create } from "d3-selection";
+import { tile, tileWrap } from "d3-tile";
+import { ZoomBehavior, ZoomTransform, zoom, zoomIdentity } from "d3-zoom";
 
-type AccidentData = {
-  coordinates: [number, number];
-  casualties: number;
-  severity: number;
-  nbrVehicles: number;
+enum TileProviders {
+  OPENSTREETMAP,
+  CARTODB_DARKMATTER,
+}
+
+type TileProviderData = {
+  url: (x: number, y: number, z: number) => string;
+  tileSize: number;
 };
 
 class MapVisualization {
-  private readonly canvas: HTMLCanvasElement;
-  private readonly deck: Deck;
-  private readonly data: Array<AccidentData>;
-
-  constructor(canvas: HTMLCanvasElement, data: Array<AccidentData>) {
-    this.canvas = canvas;
-    this.data = data;
-    this.deck = new Deck({
-      canvas: canvas,
-      useDevicePixels: 3,
-      initialViewState: {
-        longitude: -5.242559,
-        latitude: 54.861987,
-        zoom: 5.25,
-      },
-      layers: [
-        new TileLayer<ImageBitmap>({
-          data: ["http://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png"],
-          maxRequests: 20,
-          minZoom: 0,
-          maxZoom: 21,
+  private readonly container: HTMLDivElement;
+  private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
+  private readonly tile: any;
+  private readonly zoom: ZoomBehavior<Element, unknown>;
+  private images: Selection<SVGImageElement, undefined, SVGElement, undefined>;
+  private readonly tileLayerProviders: Map<TileProviders, TileProviderData> =
+    new Map([
+      [
+        TileProviders.OPENSTREETMAP,
+        {
+          url: (x, y, z) => `https://tile.openstreetmap.org/${z}/${x}/${y}.png`,
           tileSize: 256,
-          renderSubLayers: (props) => {
-            const [[west, south], [east, north]] = props.tile.boundingBox;
-            const { data, ...otherProps } = props;
-            return [
-              new BitmapLayer(otherProps, {
-                image: data,
-                bounds: [west, south, east, north],
-              }),
-            ];
-          },
-        }),
-        new ScatterplotLayer({
-          id: "casualties-layer",
-          data: data,
-          getPosition: (d: AccidentData) => d.coordinates,
-          getRadius: (d: AccidentData) => d.casualties,
-          getFillColor: (d: AccidentData) => [d.severity, 0, 0],
-          radiusScale: 3,
-        }),
+        },
       ],
-      controller: {
+      [
+        TileProviders.CARTODB_DARKMATTER,
+        {
+          url: (x, y, z) =>
+            `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`,
+          tileSize: 256,
+        },
+      ],
+    ]);
 
-      },
+  private width: number = 0;
+  private height: number = 0;
+  private currTransform: ZoomTransform;
+
+  public currentTileProvider: TileProviders = TileProviders.OPENSTREETMAP;
+
+  public constructor(container: HTMLDivElement) {
+    this.container = container;
+    this.svg = create("svg").attr("preserveAspectRatio", "none");
+    this.tile = tile()
+      .tileSize(this.tileLayerProviders.get(this.currentTileProvider)!.tileSize)
+      .clampX(false);
+    this.zoom = zoom()
+      .scaleExtent([1 << 8, 1 << 22])
+      .on("zoom", this.onZoom.bind(this));
+    this.images = this.svg
+      .append("g")
+      .attr("pointer-events", "none")
+      .selectAll("image");
+    this.container.append(this.svg.node()!);
+
+    setTimeout(() => {
+      this.width = this.container.clientWidth;
+      this.height = this.container.clientHeight;
+      this.resize();
+      console.log(`width: ${this.width}; height: ${this.height};`);
+    }, 0);
+
+    this.svg.call(this.zoom as any);
+    this.currTransform = zoomIdentity.translate(0, 0).scale(1 << 15);
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        this.width = Math.floor(entry.contentBoxSize[0].inlineSize - 10);
+        this.height = Math.floor(entry.contentBoxSize[0].blockSize - 10);
+        this.resize();
+        console.log(`width: ${this.width}; height: ${this.height};`);
+      }
     });
+    resizeObserver.observe(this.container);
+  }
+
+  public update(data: AccidentData[]) {}
+
+  private resize() {
+    this.svg.attr("viewBox", [0, 0, this.width, this.height]);
+    this.tile.extent([
+      [0, 0],
+      [this.width, this.height],
+    ]);
+    this.refreshTransform();
+  }
+
+  private onZoom(e: any): SVGSVGElement {
+    this.currTransform = e.transform;
+    const tiles = this.tile(this.currTransform);
+    //@ts-ignore
+    this.images = this.images
+      .data(tiles, (d: any) => d) // remove this seemingly unnecessary crap and you will notice some wild flickering...
+      .join("image")
+      .attr("xlink:href", (d) =>
+        this.tileLayerProviders
+          .get(this.currentTileProvider)!
+          .url(...(tileWrap(d) as [number, number, number]))
+      )
+      //@ts-ignore
+      .attr("x", ([x]) => (x + tiles.translate[0]) * tiles.scale)
+      //@ts-ignore
+      .attr("y", ([, y]) => (y + tiles.translate[1]) * tiles.scale)
+      .attr("width", tiles.scale)
+      .attr("height", tiles.scale);
+    return this.svg.node()!;
+  }
+
+  private refreshTransform() {
+    this.svg.call(this.zoom.transform as any, this.currTransform);
   }
 }
 

@@ -1,0 +1,75 @@
+html, body {
+  font-family: sans-serif;
+  color: rgb(220, 221, 225);
+  background-color: rgb(60 60 60);
+  font-size: 0.8rem;
+  margin: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  overflow-y: hidden;
+}
+
+#dataset-importer-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  align-items: baseline;
+  padding: 5px 10px;
+  border-style: hidden;
+  background-color: #262626;
+}
+
+#visualizations-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: space-around;
+  flex: 1;
+}
+
+#left-side-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-grow: 1;
+  justify-content: space-between;
+}
+
+#map-container {
+  flex: 1;
+}
+
+#timestamp-player-container {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  background-color: #262626;
+  align-items: center;
+  padding: 5px 10px;
+}
+
+#import-btn {
+  flex-grow: 1;
+}
+
+#csv-dataset-importer {
+  flex-grow: 1;
+}
+
+#timestamp-player-range-input {
+  flex-grow: 1;
+}
+
+#timestamp-player-container label::before {
+  content: "Year: ";
+  font-size: 0.7rem;
+}
+
+svg {
+  height: 100%;
+  width: 100%;
+}

@@ -3,23 +3,35 @@
 
 <head>
     <meta charset="utf-8" />
+    <link rel="stylesheet" href="./src/styles/style.css">
     <title>UK Accidents Dashboard</title>
 </head>
 
 <body>
     <div id="dataset-importer-container">
         <!-- dataset importer(s) go(es) here -->
-        <input id="csv-dataset-importer" type="file" accept=".csv">
+        <label for="csv-dataset-importer">
+            Select .csv(.zip) UK Accidents Dataset:
+        </label>
+        <input id="csv-dataset-importer" type="file" accept=".csv" />
         <button id="import-btn">
             Import
         </button>
     </div>
-    <div id="map-container">
-        <canvas>
-            <!-- map visualizaiton goes here -->
-        </canvas>
+    <div id="visualizations-container">
+        <div id="left-side-container">
+            <div id="map-container">
+            </div>
+            <div id="timestamp-player-container">
+                <button id="play-stop-btn">Play</button>
+                <label for="timestamp-player-range-input">init</label>
+                <input id="timestamp-player-range-input" type="range" step="1" min="0" max="10">
+            </div>
+        </div>
+        <div id="right-side-container">
+        </div>
     </div>
-    <script type="module" src="./src/main.ts"></script>
+    <script type="module" src="./src/main.ts" defer></script>
 </body>
 
 </html>
