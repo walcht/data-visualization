@@ -2,10 +2,10 @@ import { AccidentData } from "../interfaces/AccidentData";
 import { Selection, create } from "d3-selection";
 import { tile, tileWrap } from "d3-tile";
 import { ZoomBehavior, ZoomTransform, zoom, zoomIdentity } from "d3-zoom";
+import { ResizableVisualzation } from "../core/ResizableVisualization";
 
 enum TileProviders {
   OPENSTREETMAP,
-  CARTODB_DARKMATTER,
 }
 
 type TileProviderData = {
@@ -13,13 +13,12 @@ type TileProviderData = {
   tileSize: number;
 };
 
-class MapVisualization {
-  private readonly container: HTMLDivElement;
+class MapVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly tile: any;
   private readonly zoom: ZoomBehavior<Element, unknown>;
   private images: Selection<SVGImageElement, undefined, SVGElement, undefined>;
-  private readonly tileLayerProviders: Map<TileProviders, TileProviderData> =
+  private readonly tileProviders: Map<TileProviders, TileProviderData> =
     new Map([
       [
         TileProviders.OPENSTREETMAP,
@@ -28,28 +27,28 @@ class MapVisualization {
           tileSize: 256,
         },
       ],
-      [
-        TileProviders.CARTODB_DARKMATTER,
-        {
-          url: (x, y, z) =>
-            `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`,
-          tileSize: 256,
-        },
-      ],
     ]);
 
-  private width: number = 0;
-  private height: number = 0;
   private currTransform: ZoomTransform;
 
-  public currentTileProvider: TileProviders = TileProviders.OPENSTREETMAP;
+  public tileProviderData: TileProviderData;
 
-  public constructor(container: HTMLDivElement) {
-    this.container = container;
+  public constructor(
+    container: HTMLDivElement,
+    options?: {
+      initialTileProvider?: TileProviders;
+    }
+  ) {
+    super(container);
+    const defaultOptions = {
+      initialTileProvider:
+        (options && options.initialTileProvider) || TileProviders.OPENSTREETMAP,
+    };
     this.svg = create("svg").attr("preserveAspectRatio", "none");
-    this.tile = tile()
-      .tileSize(this.tileLayerProviders.get(this.currentTileProvider)!.tileSize)
-      .clampX(false);
+    this.tileProviderData = this.tileProviders.get(
+      defaultOptions.initialTileProvider
+    )!;
+    this.tile = tile().tileSize(this.tileProviderData.tileSize).clampX(false);
     this.zoom = zoom()
       .scaleExtent([1 << 8, 1 << 22])
       .on("zoom", this.onZoom.bind(this));
@@ -58,32 +57,16 @@ class MapVisualization {
       .attr("pointer-events", "none")
       .selectAll("image");
     this.container.append(this.svg.node()!);
-
-    setTimeout(() => {
-      this.width = this.container.clientWidth;
-      this.height = this.container.clientHeight;
-      this.resize();
-      console.log(`width: ${this.width}; height: ${this.height};`);
-    }, 0);
-
     this.svg.call(this.zoom as any);
     this.currTransform = zoomIdentity.translate(0, 0).scale(1 << 15);
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        this.width = Math.floor(entry.contentBoxSize[0].inlineSize - 10);
-        this.height = Math.floor(entry.contentBoxSize[0].blockSize - 10);
-        this.resize();
-        console.log(`width: ${this.width}; height: ${this.height};`);
-      }
-    });
-    resizeObserver.observe(this.container);
   }
 
-  public update(data: AccidentData[]) {}
+  public update(_: AccidentData[]) {}
 
-  private resize() {
-    this.svg.attr("viewBox", [0, 0, this.width, this.height]);
+  protected override resize() {
+    this.svg
+      .attr("width", "100%")
+      .attr("height", "100%")
     this.tile.extent([
       [0, 0],
       [this.width, this.height],
@@ -96,12 +79,10 @@ class MapVisualization {
     const tiles = this.tile(this.currTransform);
     //@ts-ignore
     this.images = this.images
-      .data(tiles, (d: any) => d) // remove this seemingly unnecessary crap and you will notice some wild flickering...
+      .data(tiles, (d: any) => d) // to avoid flickering ...
       .join("image")
       .attr("xlink:href", (d) =>
-        this.tileLayerProviders
-          .get(this.currentTileProvider)!
-          .url(...(tileWrap(d) as [number, number, number]))
+        this.tileProviderData.url(...(tileWrap(d) as [number, number, number]))
       )
       //@ts-ignore
       .attr("x", ([x]) => (x + tiles.translate[0]) * tiles.scale)
