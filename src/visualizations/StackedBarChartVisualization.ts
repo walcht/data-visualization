@@ -46,21 +46,8 @@ class StackedBarChartVisualization extends ResizableVisualzation {
   ) {
     super(container);
     this.svg = create("svg");
-    // create x-axis scale
     this.x = scaleLinear();
-    // append x-axis to the top
-    this.svg
-      .append("g")
-      .attr("class", "x-axis")
-      .attr("transform", `translate(0,${this.margins.top})`);
-    // create y-axis scale
     this.y = scaleBand().padding(0.08);
-    // append y-axis to the left
-    this.svg
-      .append("g")
-      .attr("class", "y-axis")
-      .attr("transform", `translate(${this.margins.left},0)`);
-    // create colors scale
     this.color = scaleOrdinal<number | string, string>();
     // create the rects SVG g container
     this.g = this.svg.append("g");
@@ -121,15 +108,30 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     }
     // update the x scale domain and x-axis
     this.x.domain([0, maxOccurences]);
-    this.svg.select<SVGGElement>("g.x-axis").call(
-      axisTop(this.x)
-        .ticks(this.width / 80)
-        .tickFormat(formatPrefix(".1", 1e3))
-    );
+    this.svg.select<SVGGElement>("g.x-axis").remove();
+    this.svg
+      .append("g")
+      .attr("class", "x-axis")
+      .attr("transform", `translate(0,${this.margins.top})`)
+      .call(
+        axisTop(this.x)
+          .ticks(this.width / 80)
+          .tickFormat(formatPrefix(".1", 1e3))
+      )
+      .call((g) =>
+        g
+          .selectAll(".tick line")
+          .clone()
+          .attr("y2", this.height - this.margins.top - this.margins.bottom)
+          .attr("stroke-opacity", 0.1)
+      );
     // update the y scale domain and y-axis
     this.y.domain(preprocessed.keys());
+    this.svg.select<SVGGElement>("g.y-axis").remove();
     this.svg
-      .select<SVGGElement>("g.y-axis")
+      .append("g")
+      .attr("class", "y-axis")
+      .attr("transform", `translate(${this.margins.left},0)`)
       .call(axisLeft(this.y).tickFormat(this.outerGroupByKeyStringifier))
       .call((g) => g.selectAll(".domain").remove());
     // set color scale (could be done in constructor but not nicely...)
