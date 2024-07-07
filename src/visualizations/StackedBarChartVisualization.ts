@@ -10,6 +10,7 @@ import {
   scaleOrdinal,
 } from "d3-scale";
 import { axisLeft, axisTop } from "d3-axis";
+import { formatPrefix } from "d3-format";
 
 class StackedBarChartVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
@@ -120,7 +121,11 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     }
     // update the x scale domain and x-axis
     this.x.domain([0, maxOccurences]);
-    this.svg.select<SVGGElement>("g.x-axis").call(axisTop(this.x));
+    this.svg.select<SVGGElement>("g.x-axis").call(
+      axisTop(this.x)
+        .ticks(this.width / 80)
+        .tickFormat(formatPrefix(".1", 1e3))
+    );
     // update the y scale domain and y-axis
     this.y.domain(preprocessed.keys());
     this.svg
