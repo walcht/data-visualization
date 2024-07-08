@@ -22,13 +22,22 @@
         <div id="left-side-container">
             <div id="map-container"></div>
             <div id="left-side-bottom-container">
-                <div id="horizontal-bar-chart-container-00"></div>
-                <div id="horizontal-bar-chart-container-01"></div>
+                <div class="hor-charts-container">
+                    <div id="horizontal-bar-chart-container-00"></div>
+                    <div id="horizontal-bar-chart-container-01"></div>
+                </div>
+                <div class="hor-charts-container">
+                    <div id="horizontal-bar-chart-container-02"></div>
+                    <div id="horizontal-bar-chart-container-03"></div>
+                </div>
             </div>
             <div id="timestamp-player-container">
                 <button id="play-stop-btn">Play</button>
-                <label for="timestamp-player-range-input">init</label>
-                <input id="timestamp-player-range-input" type="range" step="1" min="0" max="10">
+                <label id="date-player-label" for="timestamp-player-range-input">init</label>
+                <input id="timestamp-player-range-input" type="range" step="1" min="0" max="0" list="date-player-list">
+                <datalist id="date-player-list"></datalist>
+                <label for="loop">Loop: </label>
+                <input type="checkbox" id="date-player-loop" name="loop" />
             </div>
         </div>
         <div id="right-side-container">

@@ -42,12 +42,12 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     outerGroupBy: (d: AccidentData) => any,
     outerGroupByKeyStringifier: (k: any) => string,
     innerGroupBy: (d: AccidentData) => any,
-    innerGroupByColor: (k: any) => string
+    innerGroupByColor: (k: any) => string,
   ) {
     super(container);
-    this.svg = create("svg");
+    this.svg = create("svg").attr("width", "100%").attr("height", "100%");
     this.x = scaleLinear();
-    this.y = scaleBand().padding(0.08);
+    this.y = scaleBand().padding(0.2);
     this.color = scaleOrdinal<number | string, string>();
     // create the rects SVG g container
     this.g = this.svg.append("g");
@@ -76,7 +76,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     _preprocessed.forEach((v) => {
       maxOccurences = Math.max(
         [...v.values()].reduce((acc, v) => acc + v, 0),
-        maxOccurences
+        maxOccurences,
       );
     });
     // to make visualizing inner groupings easier, we pre-compute starting
@@ -116,14 +116,14 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       .call(
         axisTop(this.x)
           .ticks(this.width / 80)
-          .tickFormat(formatPrefix(".1", 1e3))
+          .tickFormat(formatPrefix(".1", 1e3)),
       )
       .call((g) =>
         g
           .selectAll(".tick line")
           .clone()
           .attr("y2", this.height - this.margins.top - this.margins.bottom)
-          .attr("stroke-opacity", 0.1)
+          .attr("stroke-opacity", 0.1),
       );
     // update the y scale domain and y-axis
     this.y.domain(preprocessed.keys());
@@ -138,7 +138,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     this.color
       .domain(innerGroupKeys)
       .range(
-        [...innerGroupKeys.values()].map((v) => this.innerGroupByKeyColor(v))
+        [...innerGroupKeys.values()].map((v) => this.innerGroupByKeyColor(v)),
       );
     // update the rects
     this.g
@@ -160,7 +160,6 @@ class StackedBarChartVisualization extends ResizableVisualzation {
   }
 
   protected override resize(): void {
-    this.svg.attr("width", "100%").attr("height", "100%");
     this.x.range([this.margins.left, this.width - this.margins.right]);
     this.y.range([this.margins.top, this.height - this.margins.bottom]);
     // call update again if there is data currently visualized

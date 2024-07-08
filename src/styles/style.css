@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
   font-family: sans-serif;
   color: rgb(220, 221, 225);
   background-color: rgb(60 60 60);
@@ -39,7 +40,7 @@ html, body {
 }
 
 #map-container {
-  flex-grow: 1;
+  flex-grow: 5;
 }
 
 #timestamp-player-container {
@@ -64,18 +65,58 @@ html, body {
   flex-grow: 1;
 }
 
-#timestamp-player-container label::before {
-  content: "Year: ";
-  font-size: 0.7rem;
-}
-
 #left-side-bottom-container {
-	display: flex;
-	flex-grow: 1;
-	gap: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex-grow: 3;
 }
 
-#left-side-bottom-container > div {
-	width: 50%;
-	background-color: #262626;
+.hor-charts-container {
+  display: flex;
+  height: 50%;
+  gap: 5px;
+}
+
+.hor-charts-container > div {
+  width: 50%;
+  background-color: #262626;
+}
+
+.playing {
+  content: "⏸";
+}
+
+.stopped {
+  content: "⏵";
+}
+
+/* CSS */
+button {
+  background-color: #fff;
+  border: 1px solid #d5d9d9;
+  color: #0f1111;
+  cursor: pointer;
+  display: inline-block;
+  font-family: sans-serif;
+  line-height: 20px;
+  padding: 0 10px 0 11px;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: middle;
+  width: 100px;
+}
+
+button:hover {
+  background-color: #0c76cc;
+  border-color: #0c76cc;
+  color: #d5d9d9;
+}
+
+button:focus {
+  border-color: #0c76cc;
 }

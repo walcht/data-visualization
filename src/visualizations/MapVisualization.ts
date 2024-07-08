@@ -37,16 +37,16 @@ class MapVisualization extends ResizableVisualzation {
     container: HTMLDivElement,
     options?: {
       initialTileProvider?: TileProviders;
-    }
+    },
   ) {
     super(container);
     const defaultOptions = {
       initialTileProvider:
         (options && options.initialTileProvider) || TileProviders.OPENSTREETMAP,
     };
-    this.svg = create("svg").attr("preserveAspectRatio", "none");
+    this.svg = create("svg").attr("width", "100%").attr("height", "100%");
     this.tileProviderData = this.tileProviders.get(
-      defaultOptions.initialTileProvider
+      defaultOptions.initialTileProvider,
     )!;
     this.tile = tile().tileSize(this.tileProviderData.tileSize).clampX(false);
     this.zoom = zoom()
@@ -64,9 +64,6 @@ class MapVisualization extends ResizableVisualzation {
   public update(_: AccidentData[]) {}
 
   protected override resize() {
-    this.svg
-      .attr("width", "100%")
-      .attr("height", "100%")
     this.tile.extent([
       [0, 0],
       [this.width, this.height],
@@ -82,7 +79,7 @@ class MapVisualization extends ResizableVisualzation {
       .data(tiles, (d: any) => d) // to avoid flickering ...
       .join("image")
       .attr("xlink:href", (d) =>
-        this.tileProviderData.url(...(tileWrap(d) as [number, number, number]))
+        this.tileProviderData.url(...(tileWrap(d) as [number, number, number])),
       )
       //@ts-ignore
       .attr("x", ([x]) => (x + tiles.translate[0]) * tiles.scale)

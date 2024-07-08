@@ -8,6 +8,7 @@ async function datasetImporter(dataset: File): Promise<Array<AccidentData>> {
   const res = new Array<AccidentData>();
   const textContent = await dataset.text();
   const lines = textContent.split("\n");
+  let ignored = 0;
   for (let i = 0; i < lines.length; ++i) {
     // first line contains attribute names
     if (i == 0) {
@@ -15,9 +16,12 @@ async function datasetImporter(dataset: File): Promise<Array<AccidentData>> {
     }
     const split = lines[i].split(",");
     const rawAS = Number(split[6]);
-    const accidentSeverity = rawAS != 1 && rawAS != 2 && rawAS != 3? undefined: rawAS;
+    const accidentSeverity =
+      rawAS != 1 && rawAS != 2 && rawAS != 3 ? undefined : rawAS;
     if (accidentSeverity == undefined) {
-        throw new Error(`accident severity takes a value other than: 1 | 2 | 3: ${rawAS}`);
+      throw new Error(
+        `accident severity takes a value other than: 1 | 2 | 3: ${rawAS}`,
+      );
     }
     const rawRT = split[16].toLowerCase();
     const roadType: RoadType =
@@ -43,18 +47,34 @@ async function datasetImporter(dataset: File): Promise<Array<AccidentData>> {
         : rawJC == "stop sign"
         ? JunctionControl.STOP_SIGN
         : JunctionControl.UNKNOWN;
+    // 18/01/2005 11:15
+    // split[9] in:   DD/MM/YYYY
+    // split[11] in:  HH/MM
+    const dateSplit = split[9].split("/");
+    const _date = new Date(
+      `${dateSplit[2]}-${dateSplit[1]}-${dateSplit[0]}T${split[11].replace(
+        "/",
+        ":",
+      )}`,
+    );
+    if (Number.isNaN(_date.valueOf())) {
+      ++ignored;
+      continue;
+    }
     res.push({
       longitude: Number(split[3]),
       latitude: Number(split[4]),
       accidentSeverity: accidentSeverity,
       nbrOfVehicles: Number(split[7]),
       nbrOfCasualties: Number(split[8]),
-      // split[9] in:   DD/MM/YYYY
-      // split[11] in:  HH/MM
-      date: new Date(`${split[9]} ${split[11]}`),
+      // format: YYYY-MM-DDTHH:mm
+      date: _date,
       roadType: roadType,
       juncitionControl: junctionControl,
     });
+  }
+  if (ignored) {
+    console.log(`ignored ${ignored} entries because of invalid Dates`);
   }
   return res;
 }
