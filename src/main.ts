@@ -3,8 +3,8 @@ import { MapVisualization } from "./visualizations/MapVisualization";
 import { StackedBarChartVisualization } from "./visualizations/StackedBarChartVisualization";
 import {
   AccidentSeverity,
-  JunctionControl,
   RoadType,
+  WeatherConditions,
 } from "./interfaces/AccidentData";
 import { DatePlayer } from "./core/DatePlayer";
 
@@ -91,15 +91,15 @@ const pool = [
   new MapVisualization(mapContainer),
   new StackedBarChartVisualization(
     barChartContainer00,
-    (d) => d.roadType,
-    (k: RoadType) => RoadType[k],
+    (d) => d.weatherConditions,
+    (k: WeatherConditions) => WeatherConditions[k],
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
   ),
   new StackedBarChartVisualization(
     barChartContainer01,
-    (d) => d.juncitionControl,
-    (k: JunctionControl) => JunctionControl[k],
+    (d) => d.roadType,
+    (k: RoadType) => RoadType[k],
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
   ),
