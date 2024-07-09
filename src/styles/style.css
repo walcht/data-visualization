@@ -35,12 +35,20 @@ body {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  flex-grow: 1;
   justify-content: space-between;
+  width: 50%;
+}
+
+#right-side-container {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  justify-content: space-between;
+  width: 50%;
 }
 
 #map-container {
-  flex-grow: 5;
+  flex-grow: 6;
 }
 
 #timestamp-player-container {
@@ -67,28 +75,14 @@ body {
 
 #left-side-bottom-container {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   gap: 5px;
-  flex-grow: 3;
+  flex-grow: 1;
 }
 
-.hor-charts-container {
-  display: flex;
-  height: 50%;
-  gap: 5px;
-}
-
-.hor-charts-container > div {
+#left-side-bottom-container > div {
   width: 50%;
   background-color: #262626;
-}
-
-.playing {
-  content: "⏸";
-}
-
-.stopped {
-  content: "⏵";
 }
 
 /* CSS */

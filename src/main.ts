@@ -71,18 +71,6 @@ const barChartContainer01 = document.querySelector(
 if (barChartContainer01 == null) {
   throw new Error("couldn't find horizontal bar container 01. Aborting ...");
 }
-const barChartContainer02 = document.querySelector(
-  "#horizontal-bar-chart-container-02",
-) as HTMLDivElement;
-if (barChartContainer02 == null) {
-  throw new Error("couldn't find horizontal bar container 02. Aborting ...");
-}
-const barChartContainer03 = document.querySelector(
-  "#horizontal-bar-chart-container-03",
-) as HTMLDivElement;
-if (barChartContainer03 == null) {
-  throw new Error("couldn't find horizontal bar container 03. Aborting ...");
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Visualizations Pool ///////////////////////////////
