@@ -14,9 +14,6 @@ class ResizableVisualzation {
   private handler(): void {
     this.width = this.container.clientWidth;
     this.height = this.container.clientHeight;
-    console.log(
-      `width: ${this.container.clientWidth}; height: ${this.container.clientHeight}`
-    );
     this.resize();
   }
 
