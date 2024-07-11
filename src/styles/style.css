@@ -1,7 +1,7 @@
 html,
 body {
   font-family: sans-serif;
-  color: rgb(220, 221, 225);
+  color: #dcdde1;
   background-color: rgb(60 60 60);
   font-size: 0.8rem;
   margin: 0;
@@ -89,6 +89,15 @@ body {
   height: 100%;
   width: 100%;
 	background-color: #262626;
+}
+
+text {
+  fill: #dcdde1;
+}
+
+.day-selection {
+  stroke: chartreuse;
+  stroke-width: 3px;
 }
 
 button {

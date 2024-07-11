@@ -1,11 +1,19 @@
-import { create, Selection } from "d3-selection";
+import { create, select, Selection } from "d3-selection";
 import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { AccidentData } from "../interfaces/AccidentData";
 import { group, range } from "d3-array";
-import { timeDay, timeYear, utcMonday, utcYear } from "d3-time";
+import {
+  timeDay,
+  timeYear,
+  utcMonday,
+  utcMonth,
+  utcMonths,
+  utcYear,
+} from "d3-time";
 import { groupByYears } from "../preprocessing/groupByYears";
 import { ScaleSequential, scaleSequential } from "d3-scale";
 import { interpolateReds } from "d3-scale-chromatic";
+import { utcFormat } from "d3-time-format";
 
 type Dims2D = {
   width: number;
@@ -17,6 +25,7 @@ type DayData = {
   year: number;
   weekInYearIdx: number;
   dayInWeekIdx: number;
+  date: Date;
 };
 /**
  * Creates a modular calendar visualization
@@ -30,6 +39,8 @@ class CalendarVisualization extends ResizableVisualzation {
     number,
     ScaleSequential<string>
   >();
+
+  private selectedDay: Selection<SVGRectElement, any, any, any> | undefined;
 
   private readonly margins: {
     top: number;
@@ -77,9 +88,32 @@ class CalendarVisualization extends ResizableVisualzation {
           // we want 0 = Monday so that weekend line is consecutive
           dayInWeekIdx: (date.getUTCDay() + 6) % 7,
           year: year,
+          date: date,
         });
       });
-      this.processedData.set(year, perDayData);
+      // fill gap days with empty data
+      const perDayDataFilledGaps = new Map<number, DayData>();
+      let i = 0;
+      for (const k of [...perDayData.keys()].sort()) {
+        const v = perDayData.get(k)!;
+        if (k > i) {
+          while (k > i) {
+            const date = new Date(v.date);
+            date.setDate(date.getDate() - (k - i));
+            perDayDataFilledGaps.set(i, {
+              value: 0,
+              year: year,
+              weekInYearIdx: utcMonday.count(utcYear(date), date),
+              dayInWeekIdx: (date.getUTCDay() + 6) % 7,
+              date: date,
+            });
+            ++i;
+          }
+        }
+        perDayDataFilledGaps.set(k, v);
+        ++i;
+      }
+      this.processedData.set(year, perDayDataFilledGaps);
       this.yearlyColorScales.set(
         year,
         scaleSequential(interpolateReds).domain([0, dailyMaxForThisYear]),
@@ -133,7 +167,7 @@ class CalendarVisualization extends ResizableVisualzation {
       .text((i) => ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"][i]);
     // create/update day rects
     years.select("g").remove();
-    years
+    const rects = years
       .append("g")
       .selectAll("rect")
       // mapping of every day of this year to data aggregated for that day
@@ -145,11 +179,54 @@ class CalendarVisualization extends ResizableVisualzation {
       .attr("y", ([, dayData]) => dayData.dayInWeekIdx * dayDims.height)
       .attr("fill", ([, dayData]) => {
         return this.yearlyColorScales.get(dayData.year)!(dayData.value);
-      });
+      })
+      .on("click", this.onDaySelect.bind(this));
+    // add tooltips
+    rects
+      .append("title")
+      .text(
+        ([, d]) =>
+          `date: ${utcFormat("%B %d, %Y")(d.date)}\naccidents: ${d.value}`,
+      );
+    // create/update month labels containers
+    this.g.select("g.month-labels-container").remove();
+    const months = years
+      .filter((_, i) => i == 0)
+      .append("g")
+      .attr("class", "month-labels-container")
+      .selectAll()
+      .data(([, values]) =>
+        utcMonths(
+          utcMonth(values.get(0)!.date),
+          values.get(values.size - 1)!.date,
+        ),
+      )
+      .join("g");
+    months
+      .append("text")
+      .attr(
+        "x",
+        (d) => utcMonday.count(utcYear(d), utcMonday.ceil(d)) * dayDims.width,
+      )
+      .attr("y", -5)
+      .text(utcFormat("%b"));
   }
 
   protected override resize(): void {
     this.update();
+  }
+
+  private onDaySelect(e: Event, d: [number, DayData]): void {
+    if (this.selectedDay) this.selectedDay.classed("day-selection", false);
+    this.selectedDay = select(e.currentTarget as any);
+    this.selectedDay?.classed("day-selection", true);
+    document.dispatchEvent(
+      new CustomEvent("dayselectionevent", {
+        detail: {
+          data: d,
+        },
+      }),
+    );
   }
 }
 
