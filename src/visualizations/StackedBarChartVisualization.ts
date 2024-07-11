@@ -12,6 +12,9 @@ import {
 import { axisLeft, axisTop } from "d3-axis";
 import { formatPrefix } from "d3-format";
 
+/**
+ * Creates a modular stacked horizontal bar chart visualization
+ */
 class StackedBarChartVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly x: ScaleLinear<any, number>;
@@ -37,24 +40,41 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     bottom: 0,
     left: 175,
   };
+
+  /**
+   *
+   * @param container HTML container where the SVG is going to be appended to
+   * @param outerGroupBy outer group-by function
+   * @param outerGroupByKeys array of all outer group-by keys. This will be used
+   * as constant-across-updates domain for the Y axis
+   * @param outerGroupByKeyStringifier outer group-by key stringifier. This will
+   * be used to format the labels of the y-axis
+   * @param innerGroupBy inner group-by function
+   * @param innerGroupByColor inner group-by coloring function. Associates a color
+   * to each value
+   * @param xAxisMax maximum value on the X axis. The X axis domain is static and
+   * set to [0, xAxisMax] to make comparisons between successive updates easier
+   */
   public constructor(
     container: HTMLDivElement,
     outerGroupBy: (d: AccidentData) => any,
+    outerGroupByKeys: Array<any>,
     outerGroupByKeyStringifier: (k: any) => string,
     innerGroupBy: (d: AccidentData) => any,
     innerGroupByColor: (k: any) => string,
+    xAxisMax: number,
   ) {
     super(container);
-    this.svg = create("svg").attr("width", "100%").attr("height", "100%");
-    this.x = scaleLinear();
-    this.y = scaleBand().padding(0.2);
-    this.color = scaleOrdinal<number | string, string>();
-    // create the rects SVG g container
-    this.g = this.svg.append("g");
     this.innerGroupBy = innerGroupBy;
     this.outerGroupBy = outerGroupBy;
     this.outerGroupByKeyStringifier = outerGroupByKeyStringifier;
     this.innerGroupByKeyColor = innerGroupByColor;
+    this.svg = create("svg").attr("width", "100%").attr("height", "100%");
+    this.x = scaleLinear().domain([0, xAxisMax]);
+    this.y = scaleBand().domain(outerGroupByKeys).padding(0.2);
+    this.color = scaleOrdinal<number | string, string>();
+    // create the rects SVG g container
+    this.g = this.svg.append("g");
     this.container.append(this.svg.node()!);
   }
 
@@ -71,14 +91,6 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       innerGroupKeys.add(inner);
       return acc;
     }, new Map<any, Map<any, number>>());
-    // compute max occurences
-    let maxOccurences = Number.NEGATIVE_INFINITY;
-    _preprocessed.forEach((v) => {
-      maxOccurences = Math.max(
-        [...v.values()].reduce((acc, v) => acc + v, 0),
-        maxOccurences,
-      );
-    });
     // to make visualizing inner groupings easier, we pre-compute starting
     // and ending occurences for each inner rect
     const preprocessed = new Map<
@@ -106,8 +118,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
         }, new Array<[any, { parentKey: any; start: number; end: number }]>());
       preprocessed.set(k0, new Map(entries));
     }
-    // update the x scale domain and x-axis
-    this.x.domain([0, maxOccurences]);
+    // update x-axis
     this.svg.select<SVGGElement>("g.x-axis").remove();
     this.svg
       .append("g")
@@ -125,8 +136,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
           .attr("y2", this.height - this.margins.top - this.margins.bottom)
           .attr("stroke-opacity", 0.1),
       );
-    // update the y scale domain and y-axis
-    this.y.domain(preprocessed.keys());
+    // update y-axis
     this.svg.select<SVGGElement>("g.y-axis").remove();
     this.svg
       .append("g")
@@ -164,6 +174,10 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     this.y.range([this.margins.top, this.height - this.margins.bottom]);
     // call update again if there is data currently visualized
     if (this.currentData) this.update(this.currentData);
+  }
+
+  public setXAxisMax(m: number): void {
+    this.x.domain([0, m]);
   }
 }
 

@@ -80,16 +80,20 @@ const pool = [
   new StackedBarChartVisualization(
     barChartContainer00,
     (d) => d.weatherConditions,
+    Object.values(WeatherConditions).filter((d) => !Number.isNaN(Number(d))),
     (k: WeatherConditions) => WeatherConditions[k],
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+    150_000,
   ),
   new StackedBarChartVisualization(
     barChartContainer01,
     (d) => d.roadType,
+    Object.values(RoadType).filter((d) => !Number.isNaN(Number(d))),
     (k: RoadType) => RoadType[k],
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+    150_000,
   ),
 ];
 importBtn.addEventListener("click", async () => {
