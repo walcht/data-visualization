@@ -8,7 +8,7 @@ body {
   height: 100%;
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 5px;
   overflow-y: hidden;
 }
 
@@ -24,11 +24,11 @@ body {
 }
 
 #visualizations-container {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: space-around;
-  flex: 1;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+	flex: 1;
+	gap: 5px;
 }
 
 #left-side-container {
@@ -85,7 +85,12 @@ body {
   background-color: #262626;
 }
 
-/* CSS */
+#calendar-container {
+  height: 100%;
+  width: 100%;
+	background-color: #262626;
+}
+
 button {
   background-color: #fff;
   border: 1px solid #d5d9d9;

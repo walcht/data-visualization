@@ -7,6 +7,7 @@ import {
   WeatherConditions,
 } from "./interfaces/AccidentData";
 import { DatePlayer } from "./core/DatePlayer";
+import { CalendarVisualization } from "./visualizations/CalendarVisualization";
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////// QUERIES ////////////////////////////////////
@@ -71,6 +72,10 @@ const barChartContainer01 = document.querySelector(
 if (barChartContainer01 == null) {
   throw new Error("couldn't find horizontal bar container 01. Aborting ...");
 }
+const calendarContainer = document.querySelector("#calendar-container") as HTMLDivElement;
+if (!calendarContainer) {
+  throw new Error("couldn't find the calendar visualization container. Aborting ...");
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Visualizations Pool ///////////////////////////////
@@ -96,6 +101,10 @@ const pool = [
     150_000,
   ),
 ];
+
+///////////////////////////////////////////////////////////////////////////////
+///////////////////////////// Event Listeners /////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 importBtn.addEventListener("click", async () => {
   if (!csvDatasetImporter.files?.length) {
     return;
@@ -109,6 +118,7 @@ importBtn.addEventListener("click", async () => {
     datePlayerList,
     accidentsData,
   );
+  new CalendarVisualization(calendarContainer, accidentsData);
 });
 document.addEventListener("date-update", (e: any) => {
   pool.forEach((v) => v.update(e.detail.data));
