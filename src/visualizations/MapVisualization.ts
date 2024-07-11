@@ -4,6 +4,9 @@ import { tile, tileWrap } from "d3-tile";
 import { ZoomBehavior, ZoomTransform, zoom, zoomIdentity } from "d3-zoom";
 import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { geoMercator, GeoProjection } from "d3-geo";
+import { Hexbin, hexbin } from "d3-hexbin";
+import { ScalePower, scaleSqrt } from "d3-scale";
+import { max } from "d3-array";
 
 enum TileProviders {
   OPENSTREETMAP,
@@ -26,6 +29,14 @@ class MapVisualization extends ResizableVisualzation {
   private readonly tile: any;
   private readonly zoom: ZoomBehavior<Element, unknown>;
   private readonly projection: GeoProjection;
+  private readonly hexbin: Hexbin<[number, number]>;
+  private readonly radius: ScalePower<number, number>;
+  private readonly binsContainer: Selection<
+    SVGGElement,
+    undefined,
+    null,
+    undefined
+  >;
   private readonly tileProviders: Map<TileProviders, TileProviderData> =
     new Map([
       [
@@ -38,6 +49,7 @@ class MapVisualization extends ResizableVisualzation {
     ]);
   private images: Selection<SVGImageElement, undefined, SVGElement, undefined>;
   private currTransform!: ZoomTransform;
+  private currData: AccidentData[] | undefined = undefined;
 
   public options: Options;
   public tileProviderData: TileProviderData;
@@ -60,6 +72,13 @@ class MapVisualization extends ResizableVisualzation {
     this.projection = geoMercator()
       .scale(1 / (2 * Math.PI))
       .translate([0, 0]);
+    this.hexbin = hexbin()
+      .extent([
+        [0, 0],
+        [this.width, this.height],
+      ])
+      .radius(10);
+    this.radius = scaleSqrt().range([0, this.hexbin.radius()]);
     this.tileProviderData = this.tileProviders.get(
       this.options.initialTileProvider,
     )!;
@@ -75,6 +94,8 @@ class MapVisualization extends ResizableVisualzation {
       .append("g")
       .attr("pointer-events", "none")
       .selectAll("image");
+    // should be last appended otherwise will get occluded
+    this.binsContainer = this.svg.append("g");
     setTimeout(() => {
       this.currTransform = zoomIdentity
         .translate(this.width / 2, this.height / 2)
@@ -91,7 +112,40 @@ class MapVisualization extends ResizableVisualzation {
     this.container.append(this.svg.node()!);
   }
 
-  public update(data: AccidentData[]) {}
+  public update(data: AccidentData[]) {
+    this.currData = data;
+    // create hexagon bins
+    let bins = this.hexbin(
+      data.reduce((acc, d) => {
+        const proj = this.projection([d.longitude, d.latitude]);
+        // otherwise when zoomed-in thousands of out-of-view
+        // svg paths will still be rendered!
+        if (
+          !proj ||
+          proj[0] < 0 ||
+          proj[0] > this.width ||
+          proj[1] < 0 ||
+          proj[1] > this.height
+        )
+          return acc;
+        acc.push(proj);
+        return acc;
+      }, new Array<[number, number]>()),
+    );
+    // update radius domain
+    this.radius.domain([0, max(bins, (d) => d.length)!]);
+    // filter very small hexagons
+    bins = bins.filter((d) => this.radius(d.length) > 1);
+    // update bins visualization
+    this.binsContainer
+      .selectAll("path")
+      .data(bins)
+      .join("path")
+      .attr("transform", (d) => `translate(${d.x},${d.y})`)
+      .attr("d", (d) => this.hexbin.hexagon(this.radius(d.length)))
+      .attr("fill", "red")
+      .attr("opacity", 0.35);
+  }
 
   protected override resize() {
     this.tile.extent([
@@ -99,6 +153,10 @@ class MapVisualization extends ResizableVisualzation {
       [this.width, this.height],
     ]);
     this.zoom.extent([
+      [0, 0],
+      [this.width, this.height],
+    ]);
+    this.hexbin.extent([
       [0, 0],
       [this.width, this.height],
     ]);
@@ -124,11 +182,17 @@ class MapVisualization extends ResizableVisualzation {
     this.projection
       .scale(this.currTransform.k / (2 * Math.PI))
       .translate([this.currTransform.x, this.currTransform.y]);
+    // don't forget to call update again
+    if (this.currData != undefined) this.update(this.currData);
     return this.svg.node()!;
   }
 
   private refreshTransform() {
-    this.svg.call(this.zoom.transform as any, this.currTransform);
+    try {
+      this.svg.call(this.zoom.transform as any, this.currTransform);
+    } catch (e) {
+      if (!(e instanceof TypeError)) throw e;
+    }
   }
 }
 
