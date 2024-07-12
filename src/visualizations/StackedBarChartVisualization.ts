@@ -1,6 +1,6 @@
-import { Selection, create } from "d3-selection";
+import { Selection, create} from "d3-selection";
 import { ResizableVisualzation } from "../core/ResizableVisualization";
-import { AccidentData } from "../interfaces/AccidentData";
+import { AccidentData, AccidentSeverity } from "../interfaces/AccidentData";
 import {
   ScaleBand,
   ScaleLinear,
@@ -35,10 +35,10 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     bottom: number;
     left: number;
   } = {
-    top: 20,
+    top: 30,
     right: 20,
-    bottom: 0,
-    left: 175,
+    bottom: 10,
+    left: 150,
   };
 
   /**
@@ -165,7 +165,12 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       .attr("x", ([, v]) => this.x(v.start))
       .attr("y", ([, v]) => this.y(v.parentKey)!)
       .attr("width", ([, v]) => this.x(v.end) - this.x(v.start))
-      .attr("height", this.y.bandwidth());
+      .attr("height", this.y.bandwidth())
+      .classed("hoverable", true)
+      .append("title")
+      .text(
+        ([k,v]) => `accidents: ${v.end - v.start}\nseverity: ${AccidentSeverity[k]}`
+      )
     this.currentData = data;
   }
 

@@ -122,4 +122,5 @@ export {
   PedestrianCrossingPhysicalFacilities,
   SpecialConditionsAtSite,
   CarriagewayHazards,
+  SpeedLimit,
 };

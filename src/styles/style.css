@@ -48,7 +48,7 @@ body {
 }
 
 #map-container {
-  flex-grow: 6;
+  flex-grow: 9;
 }
 
 #timestamp-player-container {
@@ -73,14 +73,14 @@ body {
   flex-grow: 1;
 }
 
-#left-side-bottom-container {
+.left-side-charts-container {
   display: flex;
   flex-direction: row;
   gap: 5px;
   flex-grow: 1;
 }
 
-#left-side-bottom-container > div {
+.left-side-charts-container > div {
   width: 50%;
   background-color: #262626;
 }
@@ -104,6 +104,11 @@ text {
 .day-selection {
   stroke: chartreuse;
   stroke-width: 3px;
+}
+
+.hoverable:hover {
+  stroke: #f5f6fa;
+  stroke-width: 2px;
 }
 
 button {

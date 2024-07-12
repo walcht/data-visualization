@@ -159,6 +159,7 @@ class CalendarVisualization extends ResizableVisualzation {
       .attr("fill", ([, dayData]) => {
         return this.yearlyColorScales.get(dayData.year)!(dayData.value);
       })
+      .classed("hoverable", true)
       .on("click", this.onDaySelect.bind(this));
     // add tooltips
     rects

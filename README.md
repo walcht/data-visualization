@@ -2,6 +2,15 @@
 
 This is an attempt at implementing a data visulization dashboard for the [UK traffic accidents dataset](https://www.kaggle.com/datasets/daveianhickey/2000-16-traffic-flow-england-scotland-wales/data).
 
+## Usage
+
+Open `dist/dashboard.html` file (or generate it yourself using: `npm i && npm run build`):
+
+1. select the UK accidents dataset in `dist/data.csv` (make sure to unzip)
+2. click on the import button
+3. click on play to play the yearly date player
+4. select a day on the calendar to showcase detailed hourly distribution of the accidents on that day
+
 ## Dataset
 
 General dataset statistics:
@@ -33,7 +42,8 @@ General dataset statistics:
 
 ### Map
 
-Visualizes the location of accidents in UK along with other features using [deck.gl](http://deck.gl/).
+Visualizes the location of accidents in UK. Accidents are quantized into bins (using d3.hexbin) according to
+location proximity.
 
 The following table describes the mappings between the input data features
 and the visualization channels used for this map:
@@ -41,19 +51,34 @@ and the visualization channels used for this map:
 | Feature(s)            | Visualization Channel |
 | --------------------- | --------------------- |
 | [longitude, latitude] | location              |
-| Number_of_Casualties  | circle radius         |
-| Accident_Severity     | color intensity       |
-| Number_of_Vehicles    | circle extrusion      |
+| *Number_of_Accidents  | hexagon radius        |
+| Number_of_Casualties  | color intensity       |
+
+*Number_of_Accidents is extracted from the input data and does not exist on its own as an actual provided feature.
 
 Supported interaction techniques for this 3D map visualization:
 
-1. Zoom-in\out
-1. Tooltips (on hover)
-1. Rotation
-1. Pitch-up\down
-1. Panning
+1. Tooltips
+1. Zoom-in/out
+1. Draging/panning
+1. Brushing of accidents based on location and filtering bottom stacked chart visualizations based on the selected accidents
 
-### 
+### Stacked Bar Charts
+
+Visualizations two categorical attributes; first one along the Y axis and second one with stacked bar charts horizontally.
+These are by far the most modular visualizations and can be to any other data attributes by ease.
+
+The following table describes the mappings between the input data features
+and the visualization channels used for this visualization:
+
+| Feature(s)              | Visualization Channel        |
+| ----------------------- | ---------------------------- |
+| any categorical feature | vertical grouping (Y axis)   |
+| any categorical feature | horizontal grouping (X axis) |
+
+Supported interaction techniques for this 3D map visualization:
+
+1. Tooltips
 
 ### Calendar
 
@@ -69,6 +94,18 @@ whether accidents happen on weekends more than weekdays or if there is a seasona
 
 Supported interaction techniques for this 3D map visualization:
 
-1. Tooltips (on hover)
+1. Tooltips
+2. Select a day to show a detailed per-hour distribution of the accidents for that day
+   
+### Hourly-Based Line Chart
 
-## Visualization Techniques
+Visualizes the distribution of accidents over a day on an hourly basis. This visualization is triggered by selection
+of a day on the calendar visualization (see above)
+
+| Feature(s)           | Visualization Channel |
+| -------------------- | --------------------- |
+| *Hour                | x-axis                |
+| *Number_of_Accidents | y-axis                |
+
+*Hour is extracted from the input data and does not exist on its own as an actual provided feature.
+*Number_of_Accidents is extracted from the input data and does not exist on its own as an actual provided feature.

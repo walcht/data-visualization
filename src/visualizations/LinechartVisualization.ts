@@ -3,7 +3,7 @@ import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { AccidentData } from "../interfaces/AccidentData";
 import { ScaleLinear, scaleLinear, ScaleTime, scaleUtc } from "d3-scale";
 import { axisBottom, axisLeft } from "d3-axis";
-import { group, extent } from "d3-array";
+import { group } from "d3-array";
 import { utcDay, utcHour } from "d3-time";
 import { utcFormat } from "d3-time-format";
 import { curveStepAfter, line } from "d3-shape";
@@ -98,7 +98,7 @@ class LineChartVisualization extends ResizableVisualzation {
     // update path
     const orderedPoints = new Array<[number, number]>();
     hourlyGrouped.forEach((v, hour) => {
-        orderedPoints.push([this.x(hour), this.y(v.length)]);
+      orderedPoints.push([this.x(hour), this.y(v.length)]);
     });
     orderedPoints.sort((a, b) => a[0] - b[0]);
     const l = line<[number, number]>()

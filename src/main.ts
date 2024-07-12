@@ -3,7 +3,9 @@ import { MapVisualization } from "./visualizations/MapVisualization";
 import { StackedBarChartVisualization } from "./visualizations/StackedBarChartVisualization";
 import {
   AccidentSeverity,
+  RoadSurfaceConditions,
   RoadType,
+  SpeedLimit,
   WeatherConditions,
 } from "./interfaces/AccidentData";
 import { DatePlayer } from "./core/DatePlayer";
@@ -73,13 +75,33 @@ const barChartContainer01 = document.querySelector(
 if (barChartContainer01 == null) {
   throw new Error("couldn't find horizontal bar container 01. Aborting ...");
 }
-const calendarContainer = document.querySelector("#calendar-container") as HTMLDivElement;
-if (!calendarContainer) {
-  throw new Error("couldn't find the calendar visualization container. Aborting ...");
+const barChartContainer02 = document.querySelector(
+  "#horizontal-bar-chart-container-02",
+) as HTMLDivElement;
+if (barChartContainer02 == null) {
+  throw new Error("couldn't find horizontal bar container 02. Aborting ...");
 }
-const lineChartContainer = document.querySelector("#line-chart-container") as HTMLDivElement;
+const barChartContainer03 = document.querySelector(
+  "#horizontal-bar-chart-container-03",
+) as HTMLDivElement;
+if (barChartContainer03 == null) {
+  throw new Error("couldn't find horizontal bar container 03. Aborting ...");
+}
+const calendarContainer = document.querySelector(
+  "#calendar-container",
+) as HTMLDivElement;
+if (!calendarContainer) {
+  throw new Error(
+    "couldn't find the calendar visualization container. Aborting ...",
+  );
+}
+const lineChartContainer = document.querySelector(
+  "#line-chart-container",
+) as HTMLDivElement;
 if (!lineChartContainer) {
-  throw new Error("couldn't find the line chart visualization container. Aborting ...");
+  throw new Error(
+    "couldn't find the line chart visualization container. Aborting ...",
+  );
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -89,9 +111,9 @@ const pool = [
   new MapVisualization(mapContainer),
   new StackedBarChartVisualization(
     barChartContainer00,
-    (d) => d.weatherConditions,
-    Object.values(WeatherConditions).filter((d) => !Number.isNaN(Number(d))),
-    (k: WeatherConditions) => WeatherConditions[k],
+    (d) => d.speedLimit,
+    Object.values(SpeedLimit).filter((d) => !Number.isNaN(Number(d))),
+    (k: SpeedLimit) => SpeedLimit[k].replace("_", " ").toLowerCase(),
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
     150_000,
@@ -100,7 +122,29 @@ const pool = [
     barChartContainer01,
     (d) => d.roadType,
     Object.values(RoadType).filter((d) => !Number.isNaN(Number(d))),
-    (k: RoadType) => RoadType[k],
+    (k: RoadType) => RoadType[k].replace("_", " ").toLowerCase(),
+    (d) => d.accidentSeverity,
+    (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+    150_000,
+  ),
+  new StackedBarChartVisualization(
+    barChartContainer02,
+    (d) => d.roadSurfaceConditions,
+    Object.values(RoadSurfaceConditions).filter(
+      (d) => !Number.isNaN(Number(d)),
+    ),
+    (k: RoadSurfaceConditions) =>
+      RoadSurfaceConditions[k].replace("_", " ").toLowerCase(),
+    (d) => d.accidentSeverity,
+    (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+    150_000,
+  ),
+  new StackedBarChartVisualization(
+    barChartContainer03,
+    (d) => d.weatherConditions,
+    Object.values(WeatherConditions).filter((d) => !Number.isNaN(Number(d))),
+    (k: WeatherConditions) =>
+      WeatherConditions[k].replace("_", " ").toLowerCase(),
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
     150_000,
@@ -131,4 +175,4 @@ document.addEventListener("date-update", (e: any) => {
 });
 document.addEventListener("dayselectionevent", (e: any) => {
   lineChartVisualization.update(e.detail.data);
-})
+});
