@@ -24,11 +24,11 @@ body {
 }
 
 #visualizations-container {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-around;
-	flex: 1;
-	gap: 5px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  flex: 1;
+  gap: 5px;
 }
 
 #left-side-container {
@@ -88,13 +88,13 @@ body {
 #calendar-container {
   flex-grow: 6;
   width: 100%;
-	background-color: #262626;
+  background-color: #262626;
 }
 
 #line-chart-container {
   flex-grow: 1;
   width: 100%;
-	background-color: #262626;
+  background-color: #262626;
 }
 
 text {

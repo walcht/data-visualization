@@ -2,13 +2,7 @@ import { create, select, Selection } from "d3-selection";
 import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { AccidentData } from "../interfaces/AccidentData";
 import { group, range } from "d3-array";
-import {
-  utcDay,
-  utcMonday,
-  utcMonth,
-  utcMonths,
-  utcYear,
-} from "d3-time";
+import { utcDay, utcMonday, utcMonth, utcMonths, utcYear } from "d3-time";
 import { groupByYears } from "../preprocessing/groupByYears";
 import { ScaleSequential, scaleSequential } from "d3-scale";
 import { interpolateReds } from "d3-scale-chromatic";
@@ -28,7 +22,8 @@ type DayData = {
   originalData: AccidentData[];
 };
 /**
- * Creates a modular calendar visualization
+ * Creates a modular calendar visualization that allows for temporal/seasonal
+ * analysis of UK accidents dataset.
  */
 class CalendarVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
@@ -54,6 +49,11 @@ class CalendarVisualization extends ResizableVisualzation {
     left: 80,
   };
 
+  /**
+   * @param container HTML container where the SVG is going to be appended to
+   * @param data UK accidents data for all dates. This data will be grouped
+   * according to the year then according the day of that year.
+   */
   public constructor(container: HTMLDivElement, data: AccidentData[]) {
     super(container);
     this.svg = create("svg").attr("width", "100%").attr("height", "100%");

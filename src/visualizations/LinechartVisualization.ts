@@ -8,6 +8,10 @@ import { utcDay, utcHour } from "d3-time";
 import { utcFormat } from "d3-time-format";
 import { curveStepAfter, line } from "d3-shape";
 
+/**
+ * Creates a line + scatterplot visualization to reflect hourly-based distribution
+ * of data
+ */
 class LineChartVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly path: Selection<SVGPathElement, undefined, null, undefined>;
@@ -29,6 +33,9 @@ class LineChartVisualization extends ResizableVisualzation {
     left: 80,
   };
 
+  /**
+   * @param container HTML container where the SVG is going to be appended to
+   */
   public constructor(container: HTMLDivElement) {
     super(container);
     this.svg = create("svg").attr("width", "100%").attr("height", "100%");
@@ -46,6 +53,10 @@ class LineChartVisualization extends ResizableVisualzation {
     this.container.append(this.svg.node()!);
   }
 
+  /**
+   * Updates the visualization to reflect the provided data
+   * @param data AccidentsData array
+   */
   public update(data: AccidentData[]) {
     this.currentData = data;
     // pre-process received data

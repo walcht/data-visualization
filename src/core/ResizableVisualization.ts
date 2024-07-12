@@ -1,3 +1,6 @@
+/**
+ * Inherit to add responsiveness for SVG elements
+ */
 class ResizableVisualzation {
   protected readonly container: HTMLDivElement;
   protected width!: number;

@@ -7,8 +7,10 @@ import { geoMercator, GeoProjection } from "d3-geo";
 import { Hexbin, hexbin } from "d3-hexbin";
 import { ScalePower, scaleSqrt } from "d3-scale";
 import { max } from "d3-array";
+import { brush, BrushBehavior } from "d3-brush";
 
 enum TileProviders {
+  CARTODB_DARKMATTER,
   OPENSTREETMAP,
 }
 
@@ -18,12 +20,25 @@ type TileProviderData = {
 };
 
 type Options = {
+  /**
+   * initail tile layer provider. Defaults to CARTODB_DARKMATTER
+   */
   initialTileProvider: TileProviders;
+  /**
+   * initial scale (a power of 2). Defaults to 1 << 14
+   */
   initialScale: number;
+  /**
+   * initial center in WGS84 [lat, lon] coordinates in degrees. Defaults to [-2.983333, 53.400002]
+   */
   initialCenter: [number, number];
-  boundingBox: [[number, number], [number, number]];
 };
 
+/**
+ * Creates an interactive raster-tiles-based map visualization
+ *
+ * @note `b` enables/disables brushing
+ */
 class MapVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly tile: any;
@@ -46,27 +61,38 @@ class MapVisualization extends ResizableVisualzation {
           tileSize: 256,
         },
       ],
+      [
+        TileProviders.CARTODB_DARKMATTER,
+        {
+          url: (x, y, z) =>
+            `https://a.basemaps.cartocdn.com/dark_all/${z}/${x}/${y}.png`,
+          tileSize: 256,
+        },
+      ],
     ]);
+  private readonly brush: BrushBehavior<any>;
   private images: Selection<SVGImageElement, undefined, SVGElement, undefined>;
   private currTransform!: ZoomTransform;
   private currData: AccidentData[] | undefined = undefined;
+  private zoomEnabled: boolean = true;
 
   public options: Options;
   public tileProviderData: TileProviderData;
 
+  /**
+   * @param container HTML container where the SVG is going to be appended to
+   * @param options optional initial configuration options
+   */
   public constructor(container: HTMLDivElement, options?: Partial<Options>) {
     super(container);
     this.options = {
       initialTileProvider:
-        (options && options.initialTileProvider) || TileProviders.OPENSTREETMAP,
+        (options && options.initialTileProvider) ||
+        TileProviders.CARTODB_DARKMATTER,
       initialScale: (options && options.initialScale) || 1 << 14,
       initialCenter: (options && options.initialCenter) || [
         -2.983333, 53.400002,
       ], // Liverpool
-      boundingBox: (options && options.boundingBox) || [
-        [0, 0],
-        [0, 0],
-      ],
     };
     this.svg = create("svg").attr("width", "100%").attr("height", "100%");
     this.projection = geoMercator()
@@ -108,10 +134,22 @@ class MapVisualization extends ResizableVisualzation {
         this.zoom.transform,
         this.currTransform,
       );
+      this.enableZoom();
     }, 0);
     this.container.append(this.svg.node()!);
+    // create brushing behaviour
+    this.brush = brush().on("end", this.onBrush.bind(this));
+    window.addEventListener("keypress", (e) => {
+      if (e.key == "Control") return;
+      if (e.key == "b")
+        this.zoomEnabled ? this.disableZoom() : this.enableZoom();
+    });
   }
 
+  /**
+   * Updates the visualization to reflect the provided data
+   * @param data AccidentsData array
+   */
   public update(data: AccidentData[]) {
     this.currData = data;
     // create hexagon bins
@@ -145,21 +183,18 @@ class MapVisualization extends ResizableVisualzation {
       .attr("d", (d) => this.hexbin.hexagon(this.radius(d.length)))
       .attr("fill", "red")
       .attr("opacity", 0.35);
+    // brushing
   }
 
   protected override resize() {
-    this.tile.extent([
+    const view: [[number, number], [number, number]] = [
       [0, 0],
       [this.width, this.height],
-    ]);
-    this.zoom.extent([
-      [0, 0],
-      [this.width, this.height],
-    ]);
-    this.hexbin.extent([
-      [0, 0],
-      [this.width, this.height],
-    ]);
+    ];
+    this.tile.extent(view);
+    this.zoom.extent(view);
+    this.hexbin.extent(view);
+    this.brush.extent(view);
     this.refreshTransform();
   }
 
@@ -188,11 +223,54 @@ class MapVisualization extends ResizableVisualzation {
   }
 
   private refreshTransform() {
+    if (!this.zoomEnabled) return;
     try {
       this.svg.call(this.zoom.transform as any, this.currTransform);
     } catch (e) {
       if (!(e instanceof TypeError)) throw e;
     }
+  }
+
+  private onBrush(e: any): void {
+    if (!e.selection) {
+      this.binsContainer.selectAll("path").attr("stroke", "none");
+      return;
+    }
+    // TODO: determine original data
+    const [[x0, y0], [x1, y1]] = e.selection;
+    this.binsContainer
+      .selectAll("path")
+      .attr("stroke", "none")
+      .filter((d: any) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1)
+      .attr("stroke", "#00a8ff");
+  }
+
+  /**
+   * Enables zoom behaviour and disables brushing
+   */
+  public enableZoom(): void {
+    // disable brushing
+    try {
+      this.svg.call(this.brush.clear as any);
+    } catch (e) {
+      if (!(e instanceof TypeError)) throw e;
+    }
+    this.svg.on(".brush", null);
+    this.zoomEnabled = true;
+    this.svg.call(this.zoom as any);
+    // remove rects added by brush
+    this.svg.selectAll("rect").remove();
+  }
+
+  /**
+   * Disables zoom behaviour and enables brushing
+   */
+  public disableZoom(): void {
+    // disable zoom
+    this.zoomEnabled = false;
+    this.svg.on(".zoom", null);
+    // enable brushing
+    this.svg.call(this.brush as any);
   }
 }
 

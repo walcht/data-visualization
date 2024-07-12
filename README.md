@@ -61,7 +61,10 @@ Supported interaction techniques for this 3D map visualization:
 1. Tooltips
 1. Zoom-in/out
 1. Draging/panning
-1. Brushing of accidents based on location and filtering bottom stacked chart visualizations based on the selected accidents
+1. Enable/disable brushing by pressing `b`
+1. Brushing of accidents based on location and filtering bottom stacked chart visualizations based on the selected accidents*
+
+*aborted due to difficulties inversing binified WGS84 data
 
 ### Stacked Bar Charts
 

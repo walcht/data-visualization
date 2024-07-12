@@ -107,6 +107,7 @@ if (!lineChartContainer) {
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Visualizations Pool ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
+// a pool of visualizations that are going to be updated by the DatePlayer
 const pool = [
   new MapVisualization(mapContainer),
   new StackedBarChartVisualization(
@@ -157,6 +158,7 @@ const lineChartVisualization = new LineChartVisualization(lineChartContainer);
 ///////////////////////////////////////////////////////////////////////////////
 importBtn.addEventListener("click", async () => {
   if (!csvDatasetImporter.files?.length) {
+    alert("Please select a .csv dataset then click on import.");
     return;
   }
   const accidentsData = await datasetImporter(csvDatasetImporter.files[0]);
@@ -170,9 +172,11 @@ importBtn.addEventListener("click", async () => {
   );
   new CalendarVisualization(calendarContainer, accidentsData);
 });
+// listen to date update events dispatched by the DatePlayer
 document.addEventListener("date-update", (e: any) => {
   pool.forEach((v) => v.update(e.detail.data));
 });
+// listen to day selection event dispatched by calendar visualization
 document.addEventListener("dayselectionevent", (e: any) => {
   lineChartVisualization.update(e.detail.data);
 });

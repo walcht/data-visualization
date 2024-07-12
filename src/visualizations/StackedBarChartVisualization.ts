@@ -1,4 +1,4 @@
-import { Selection, create} from "d3-selection";
+import { Selection, create } from "d3-selection";
 import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { AccidentData, AccidentSeverity } from "../interfaces/AccidentData";
 import {
@@ -169,8 +169,9 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       .classed("hoverable", true)
       .append("title")
       .text(
-        ([k,v]) => `accidents: ${v.end - v.start}\nseverity: ${AccidentSeverity[k]}`
-      )
+        ([k, v]) =>
+          `accidents: ${v.end - v.start}\nseverity: ${AccidentSeverity[k]}`,
+      );
     this.currentData = data;
   }
 

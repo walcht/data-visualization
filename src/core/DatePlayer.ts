@@ -2,11 +2,25 @@ import { AccidentData } from "../interfaces/AccidentData";
 import { groupByYears } from "../preprocessing/groupByYears";
 
 type Options = {
+  /**
+   * Update interval in `ms`. I.e., how long to stay before calling the next update.
+   * Defaults to `1000ms`
+   */
   interval: number;
+  /**
+   * enable/disable looping. Defaults to `false`
+   */
   loop: boolean;
+  /**
+   * whether to automatically play once this object is created. Defaults to `false`
+   */
   autoplay: boolean;
 };
 
+/**
+ * A player that plays a date timeframe and provides data grouped according to each date
+ * @dispatches `date-update` events for every new date
+ */
 class DatePlayer {
   private readonly playStopBtn: HTMLButtonElement;
   private readonly label: HTMLLabelElement;
@@ -23,6 +37,15 @@ class DatePlayer {
 
   public options: Options;
 
+  /**
+   * @param input date HTML input element
+   * @param playStopBtn HTML play/stop button
+   * @param loopCheckbox HTML loop check checkbox
+   * @param label HTML date label
+   * @param datalist HTML input datalist
+   * @param data accidents data that will be grouped according to a date specifier (currently only `year`)
+   * @param options optional options
+   */
   public constructor(
     input: HTMLInputElement,
     playStopBtn: HTMLButtonElement,
@@ -41,7 +64,7 @@ class DatePlayer {
     this.options = {
       interval: (options && options.interval) || 1000,
       loop: (options && options.loop) || false,
-      autoplay: (options && options.autoplay) || true,
+      autoplay: (options && options.autoplay) || false,
     };
     this.datedData = groupByYears(this.data);
     this.dateMapping = [...this.datedData.keys()].sort();
@@ -87,6 +110,9 @@ class DatePlayer {
     }, this.options.interval);
   }
 
+  /**
+   * Plays the date player. Does nothing if already playing
+   */
   public play(): void {
     if (this.isPlaying) return;
     this.isPlaying = true;
@@ -100,6 +126,9 @@ class DatePlayer {
     this.update();
   }
 
+  /**
+   * Stops the date player. Does nothing if already stopped.
+   */
   public stop(): void {
     if (!this.isPlaying) return;
     this.isPlaying = false;
