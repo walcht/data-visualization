@@ -86,7 +86,13 @@ body {
 }
 
 #calendar-container {
-  height: 100%;
+  flex-grow: 6;
+  width: 100%;
+	background-color: #262626;
+}
+
+#line-chart-container {
+  flex-grow: 1;
   width: 100%;
 	background-color: #262626;
 }

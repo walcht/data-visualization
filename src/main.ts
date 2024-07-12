@@ -8,6 +8,7 @@ import {
 } from "./interfaces/AccidentData";
 import { DatePlayer } from "./core/DatePlayer";
 import { CalendarVisualization } from "./visualizations/CalendarVisualization";
+import { LineChartVisualization } from "./visualizations/LinechartVisualization";
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////// QUERIES ////////////////////////////////////
@@ -76,6 +77,10 @@ const calendarContainer = document.querySelector("#calendar-container") as HTMLD
 if (!calendarContainer) {
   throw new Error("couldn't find the calendar visualization container. Aborting ...");
 }
+const lineChartContainer = document.querySelector("#line-chart-container") as HTMLDivElement;
+if (!lineChartContainer) {
+  throw new Error("couldn't find the line chart visualization container. Aborting ...");
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Visualizations Pool ///////////////////////////////
@@ -101,6 +106,7 @@ const pool = [
     150_000,
   ),
 ];
+const lineChartVisualization = new LineChartVisualization(lineChartContainer);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Event Listeners /////////////////////////////////
@@ -123,3 +129,6 @@ importBtn.addEventListener("click", async () => {
 document.addEventListener("date-update", (e: any) => {
   pool.forEach((v) => v.update(e.detail.data));
 });
+document.addEventListener("dayselectionevent", (e: any) => {
+  lineChartVisualization.update(e.detail.data);
+})

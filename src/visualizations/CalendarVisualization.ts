@@ -3,8 +3,7 @@ import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { AccidentData } from "../interfaces/AccidentData";
 import { group, range } from "d3-array";
 import {
-  timeDay,
-  timeYear,
+  utcDay,
   utcMonday,
   utcMonth,
   utcMonths,
@@ -26,6 +25,7 @@ type DayData = {
   weekInYearIdx: number;
   dayInWeekIdx: number;
   date: Date;
+  originalData: AccidentData[];
 };
 /**
  * Creates a modular calendar visualization
@@ -70,7 +70,7 @@ class CalendarVisualization extends ResizableVisualzation {
     yearlyData.forEach((accidents, year) => {
       const perDayData = new Map<number, DayData>();
       const perDayGroup = group(accidents, (v) =>
-        timeDay.count(timeYear(v.date), v.date),
+        utcDay.count(utcYear(v.date), v.date),
       );
       let dailyMaxForThisYear = Number.NEGATIVE_INFINITY;
       perDayGroup.forEach((dailyAccidents, day) => {
@@ -78,7 +78,7 @@ class CalendarVisualization extends ResizableVisualzation {
           dailyMaxForThisYear,
           dailyAccidents.length,
         );
-        const date = new Date(dailyAccidents[0].date.toDateString());
+        const date = utcDay(dailyAccidents[0].date);
         perDayData.set(day, {
           value: dailyAccidents.length,
           // utcMonay.count returns 0-based week number in year
@@ -89,31 +89,10 @@ class CalendarVisualization extends ResizableVisualzation {
           dayInWeekIdx: (date.getUTCDay() + 6) % 7,
           year: year,
           date: date,
+          originalData: dailyAccidents,
         });
       });
-      // fill gap days with empty data
-      const perDayDataFilledGaps = new Map<number, DayData>();
-      let i = 0;
-      for (const k of [...perDayData.keys()].sort()) {
-        const v = perDayData.get(k)!;
-        if (k > i) {
-          while (k > i) {
-            const date = new Date(v.date);
-            date.setDate(date.getDate() - (k - i));
-            perDayDataFilledGaps.set(i, {
-              value: 0,
-              year: year,
-              weekInYearIdx: utcMonday.count(utcYear(date), date),
-              dayInWeekIdx: (date.getUTCDay() + 6) % 7,
-              date: date,
-            });
-            ++i;
-          }
-        }
-        perDayDataFilledGaps.set(k, v);
-        ++i;
-      }
-      this.processedData.set(year, perDayDataFilledGaps);
+      this.processedData.set(year, perDayData);
       this.yearlyColorScales.set(
         year,
         scaleSequential(interpolateReds).domain([0, dailyMaxForThisYear]),
@@ -223,7 +202,7 @@ class CalendarVisualization extends ResizableVisualzation {
     document.dispatchEvent(
       new CustomEvent("dayselectionevent", {
         detail: {
-          data: d,
+          data: d[1].originalData,
         },
       }),
     );
