@@ -181,8 +181,8 @@ class MapVisualization extends ResizableVisualzation {
       .join("path")
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
       .attr("d", (d) => this.hexbin.hexagon(this.radius(d.length)))
-      .attr("fill", "red")
-      .attr("opacity", 0.35);
+      .attr("fill", "#e84118")
+      .attr("opacity", 0.7);
     // brushing
   }
 
@@ -233,7 +233,7 @@ class MapVisualization extends ResizableVisualzation {
 
   private onBrush(e: any): void {
     if (!e.selection) {
-      this.binsContainer.selectAll("path").attr("stroke", "none");
+      this.binsContainer.selectAll("path").attr("stroke", "none").attr("opacity", 0.7);
       return;
     }
     // TODO: determine original data
@@ -241,8 +241,11 @@ class MapVisualization extends ResizableVisualzation {
     this.binsContainer
       .selectAll("path")
       .attr("stroke", "none")
+      .attr("opacity", 0.7)
       .filter((d: any) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1)
-      .attr("stroke", "#00a8ff");
+      .attr("stroke", "#f5f6fa")
+      .attr("stroke-width", "2px")
+      .attr("opacity", 0.95);
   }
 
   /**

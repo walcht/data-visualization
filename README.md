@@ -2,6 +2,8 @@
 
 This is an attempt at implementing a data visulization dashboard for the [UK traffic accidents dataset](https://www.kaggle.com/datasets/daveianhickey/2000-16-traffic-flow-england-scotland-wales/data).
 
+![image](media/dashboard.PNG)
+
 ## Usage
 
 Open `dist/dashboard.html` file (or generate it yourself using: `npm i && npm run build`):
