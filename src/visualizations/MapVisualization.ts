@@ -267,7 +267,9 @@ class MapVisualization extends ResizableVisualzation {
         .attr("stroke", "none")
         .attr("opacity", 0.7);
       document.dispatchEvent(
-        new CustomEvent("map-selection-update", { detail: { data: this.currData } }),
+        new CustomEvent("map-selection-update", {
+          detail: { data: this.currData },
+        }),
       );
       return;
     }
@@ -307,7 +309,9 @@ class MapVisualization extends ResizableVisualzation {
     this.svg.selectAll("rect").remove();
     if (this.currSelection)
       document.dispatchEvent(
-        new CustomEvent("map-selection-update", { detail: { data: this.currData } }),
+        new CustomEvent("map-selection-update", {
+          detail: { data: this.currData },
+        }),
       );
   }
 
