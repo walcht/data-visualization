@@ -109,43 +109,45 @@ if (!lineChartContainer) {
 /////////////////////////// Visualizations Pool ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 const mapVisualization = new MapVisualization(mapContainer);
-const stackedBarChartVisualization00 =  new StackedBarChartVisualization(
-    barChartContainer00,
-    (d) => d.speedLimit,
-    Object.values(SpeedLimit).filter((d) => !Number.isNaN(Number(d))),
-    (k: SpeedLimit) => SpeedLimit[k].replace("_", " ").toLowerCase(),
-    (d) => d.accidentSeverity,
-    (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-  );
- const stackedBarChartVisualization01 = new StackedBarChartVisualization(
-    barChartContainer01,
-    (d) => d.roadType,
-    Object.values(RoadType).filter((d) => !Number.isNaN(Number(d))),
-    (k: RoadType) => RoadType[k].replace("_", " ").toLowerCase(),
-    (d) => d.accidentSeverity,
-    (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-  );
- const stackedBarChartVisualization02 = new StackedBarChartVisualization(
-    barChartContainer02,
-    (d) => d.roadSurfaceConditions,
-    Object.values(RoadSurfaceConditions).filter(
-      (d) => !Number.isNaN(Number(d)),
-    ),
-    (k: RoadSurfaceConditions) =>
-      RoadSurfaceConditions[k].replace("_", " ").toLowerCase(),
-    (d) => d.accidentSeverity,
-    (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-  );
- const stackedBarChartVisualization03 = new StackedBarChartVisualization(
-    barChartContainer03,
-    (d) => d.weatherConditions,
-    Object.values(WeatherConditions).filter((d) => !Number.isNaN(Number(d))),
-    (k: WeatherConditions) =>
-      WeatherConditions[k].replace("_", " ").toLowerCase(),
-    (d) => d.accidentSeverity,
-    (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-  );
-const lineChartVisualization = new LineChartVisualization(lineChartContainer, (data) => sum(data, (d) => d.nbrOfCasualties), "nbr of casualties");
+const stackedBarChartVisualization00 = new StackedBarChartVisualization(
+  barChartContainer00,
+  (d) => d.speedLimit,
+  Object.values(SpeedLimit).filter((d) => !Number.isNaN(Number(d))),
+  (k: SpeedLimit) => SpeedLimit[k].replace("_", " ").toLowerCase(),
+  (d) => d.accidentSeverity,
+  (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+);
+const stackedBarChartVisualization01 = new StackedBarChartVisualization(
+  barChartContainer01,
+  (d) => d.roadType,
+  Object.values(RoadType).filter((d) => !Number.isNaN(Number(d))),
+  (k: RoadType) => RoadType[k].replace("_", " ").toLowerCase(),
+  (d) => d.accidentSeverity,
+  (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+);
+const stackedBarChartVisualization02 = new StackedBarChartVisualization(
+  barChartContainer02,
+  (d) => d.roadSurfaceConditions,
+  Object.values(RoadSurfaceConditions).filter((d) => !Number.isNaN(Number(d))),
+  (k: RoadSurfaceConditions) =>
+    RoadSurfaceConditions[k].replace("_", " ").toLowerCase(),
+  (d) => d.accidentSeverity,
+  (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+);
+const stackedBarChartVisualization03 = new StackedBarChartVisualization(
+  barChartContainer03,
+  (d) => d.weatherConditions,
+  Object.values(WeatherConditions).filter((d) => !Number.isNaN(Number(d))),
+  (k: WeatherConditions) =>
+    WeatherConditions[k].replace("_", " ").toLowerCase(),
+  (d) => d.accidentSeverity,
+  (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
+);
+const lineChartVisualization = new LineChartVisualization(
+  lineChartContainer,
+  (data) => sum(data, (d) => d.nbrOfCasualties),
+  "nbr of casualties",
+);
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Event Listeners /////////////////////////////////

@@ -180,7 +180,7 @@ class MapVisualization extends ResizableVisualzation {
       data.reduce((acc, d) => {
         const proj = this.projection([d.longitude, d.latitude]);
         // otherwise when zoomed-in thousands of out-of-view
-        // svg paths will still be rendered => very poor performance
+        // svg paths/circles will still be rendered => very poor performance
         if (
           !proj ||
           proj[0] < 0 ||
@@ -203,13 +203,13 @@ class MapVisualization extends ResizableVisualzation {
     bins = bins.filter((d) => this.radius(d.length) > 1);
     // update bins visualization
     this.binsContainer
-      .selectAll("path")
+      .selectAll("circle")
       .data(bins)
-      .join("path")
+      .join("circle")
       .attr("transform", (d) => `translate(${d.x},${d.y})`)
-      .attr("d", (d) => this.hexbin.hexagon(this.radius(d.length)))
+      .attr("r", (d) => this.radius(d.length))
       .attr("fill", "#e84118")
-      .attr("opacity", 0.7);
+      .attr("opacity", 0.55);
     // dispatch selection update event even if there is no currenct selection
     this.onBrush({ selection: this.currSelection });
   }
@@ -263,9 +263,9 @@ class MapVisualization extends ResizableVisualzation {
     this.currSelection = selection;
     if (!this.currSelection) {
       this.binsContainer
-        .selectAll("path")
+        .selectAll("circle")
         .attr("stroke", "none")
-        .attr("opacity", 0.7);
+        .attr("opacity", 0.55);
       document.dispatchEvent(
         new CustomEvent("map-selection-update", {
           detail: { data: this.currData },
@@ -276,9 +276,9 @@ class MapVisualization extends ResizableVisualzation {
     const [[x0, y0], [x1, y1]] = this.currSelection;
     const data = (
       this.binsContainer
-        .selectAll("path")
+        .selectAll("circle")
         .attr("stroke", "none")
-        .attr("opacity", 0.7)
+        .attr("opacity", 0.55)
         .filter((d: any) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1)
         .attr("stroke", "#f5f6fa")
         .attr("stroke-width", "2px")
