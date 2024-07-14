@@ -34,17 +34,30 @@ type Options = {
   initialCenter: [number, number];
 };
 
-/**
- * Creates an interactive raster-tiles-based map visualization
- *
- * @note `b` enables/disables brushing
- */
+type BinData = {
+  /**
+   * Projected X coordinates in view space (width) of a geoposition
+   */
+  x: number;
+  /**
+   * Projected Y coordinates in view space (width) of a geoposition
+   */
+  y: number;
+  /**
+   * Reference to original datapoint. Useful to avoid inverse operations
+   * (e.g., for tooltips, selections, etc.)
+   */
+  datapoint: AccidentData;
+};
+
+type BrushSelection = [[number, number], [number, number]];
+
 class MapVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly tile: any;
   private readonly zoom: ZoomBehavior<Element, unknown>;
   private readonly projection: GeoProjection;
-  private readonly hexbin: Hexbin<[number, number]>;
+  private readonly hexbin: Hexbin<BinData>;
   private readonly radius: ScalePower<number, number>;
   private readonly binsContainer: Selection<
     SVGGElement,
@@ -75,13 +88,21 @@ class MapVisualization extends ResizableVisualzation {
   private currTransform!: ZoomTransform;
   private currData: AccidentData[] | undefined = undefined;
   private zoomEnabled: boolean = true;
+  private currSelection: BrushSelection | null = null;
 
   public options: Options;
   public tileProviderData: TileProviderData;
 
   /**
+   * Creates an interactive raster-tiles-based map visualization
+   *
    * @param container HTML container where the SVG is going to be appended to
+   *
    * @param options optional initial configuration options
+   *
+   * @dispatches
+   * `map-selection-update` event when a brush selection is done with at least one element selected
+   * or when a deselection is done.
    */
   public constructor(container: HTMLDivElement, options?: Partial<Options>) {
     super(container);
@@ -98,11 +119,13 @@ class MapVisualization extends ResizableVisualzation {
     this.projection = geoMercator()
       .scale(1 / (2 * Math.PI))
       .translate([0, 0]);
-    this.hexbin = hexbin()
+    this.hexbin = hexbin<BinData>()
       .extent([
         [0, 0],
         [this.width, this.height],
       ])
+      .x((d) => d.x)
+      .y((d) => d.y)
       .radius(10);
     this.radius = scaleSqrt().range([0, this.hexbin.radius()]);
     this.tileProviderData = this.tileProviders.get(
@@ -157,7 +180,7 @@ class MapVisualization extends ResizableVisualzation {
       data.reduce((acc, d) => {
         const proj = this.projection([d.longitude, d.latitude]);
         // otherwise when zoomed-in thousands of out-of-view
-        // svg paths will still be rendered!
+        // svg paths will still be rendered => very poor performance
         if (
           !proj ||
           proj[0] < 0 ||
@@ -166,11 +189,15 @@ class MapVisualization extends ResizableVisualzation {
           proj[1] > this.height
         )
           return acc;
-        acc.push(proj);
+        acc.push({
+          x: proj[0],
+          y: proj[1],
+          datapoint: d,
+        });
         return acc;
-      }, new Array<[number, number]>()),
+      }, new Array<BinData>()),
     );
-    // update radius domain
+    // update radius domain (max is only for this view - not the entire dataset!)
     this.radius.domain([0, max(bins, (d) => d.length)!]);
     // filter very small hexagons
     bins = bins.filter((d) => this.radius(d.length) > 1);
@@ -183,7 +210,8 @@ class MapVisualization extends ResizableVisualzation {
       .attr("d", (d) => this.hexbin.hexagon(this.radius(d.length)))
       .attr("fill", "#e84118")
       .attr("opacity", 0.7);
-    // brushing
+    // dispatch selection update event even if there is no currenct selection
+    this.onBrush({ selection: this.currSelection });
   }
 
   protected override resize() {
@@ -231,21 +259,35 @@ class MapVisualization extends ResizableVisualzation {
     }
   }
 
-  private onBrush(e: any): void {
-    if (!e.selection) {
-      this.binsContainer.selectAll("path").attr("stroke", "none").attr("opacity", 0.7);
+  private onBrush({ selection }: { selection: BrushSelection | null }): void {
+    this.currSelection = selection;
+    if (!this.currSelection) {
+      this.binsContainer
+        .selectAll("path")
+        .attr("stroke", "none")
+        .attr("opacity", 0.7);
+      document.dispatchEvent(
+        new CustomEvent("map-selection-update", { detail: { data: this.currData } }),
+      );
       return;
     }
-    // TODO: determine original data
-    const [[x0, y0], [x1, y1]] = e.selection;
-    this.binsContainer
-      .selectAll("path")
-      .attr("stroke", "none")
-      .attr("opacity", 0.7)
-      .filter((d: any) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1)
-      .attr("stroke", "#f5f6fa")
-      .attr("stroke-width", "2px")
-      .attr("opacity", 0.95);
+    const [[x0, y0], [x1, y1]] = this.currSelection;
+    const data = (
+      this.binsContainer
+        .selectAll("path")
+        .attr("stroke", "none")
+        .attr("opacity", 0.7)
+        .filter((d: any) => d.x >= x0 && d.x <= x1 && d.y >= y0 && d.y <= y1)
+        .attr("stroke", "#f5f6fa")
+        .attr("stroke-width", "2px")
+        .attr("opacity", 0.95)
+        .data()
+        .flat() as Array<BinData>
+    ).map((d) => d.datapoint);
+    if (data)
+      document.dispatchEvent(
+        new CustomEvent("map-selection-update", { detail: { data: data } }),
+      );
   }
 
   /**
@@ -263,6 +305,10 @@ class MapVisualization extends ResizableVisualzation {
     this.svg.call(this.zoom as any);
     // remove rects added by brush
     this.svg.selectAll("rect").remove();
+    if (this.currSelection)
+      document.dispatchEvent(
+        new CustomEvent("map-selection-update", { detail: { data: this.currData } }),
+      );
   }
 
   /**

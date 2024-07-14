@@ -12,9 +12,6 @@ import {
 import { axisLeft, axisTop } from "d3-axis";
 import { formatPrefix } from "d3-format";
 
-/**
- * Creates a modular stacked horizontal bar chart visualization
- */
 class StackedBarChartVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly x: ScaleLinear<any, number>;
@@ -42,18 +39,22 @@ class StackedBarChartVisualization extends ResizableVisualzation {
   };
 
   /**
+   * Creates a modular stacked horizontal bar chart visualization
    *
    * @param container HTML container where the SVG is going to be appended to
+   *
    * @param outerGroupBy outer group-by function
+   *
    * @param outerGroupByKeys array of all outer group-by keys. This will be used
    * as constant-across-updates domain for the Y axis
+   *
    * @param outerGroupByKeyStringifier outer group-by key stringifier. This will
    * be used to format the labels of the y-axis
+   *
    * @param innerGroupBy inner group-by function
+   *
    * @param innerGroupByColor inner group-by coloring function. Associates a color
    * to each value
-   * @param xAxisMax maximum value on the X axis. The X axis domain is static and
-   * set to [0, xAxisMax] to make comparisons between successive updates easier
    */
   public constructor(
     container: HTMLDivElement,
@@ -62,7 +63,6 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     outerGroupByKeyStringifier: (k: any) => string,
     innerGroupBy: (d: AccidentData) => any,
     innerGroupByColor: (k: any) => string,
-    xAxisMax: number,
   ) {
     super(container);
     this.innerGroupBy = innerGroupBy;
@@ -70,7 +70,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     this.outerGroupByKeyStringifier = outerGroupByKeyStringifier;
     this.innerGroupByKeyColor = innerGroupByColor;
     this.svg = create("svg").attr("width", "100%").attr("height", "100%");
-    this.x = scaleLinear().domain([0, xAxisMax]);
+    this.x = scaleLinear();
     this.y = scaleBand().domain(outerGroupByKeys).padding(0.2);
     this.color = scaleOrdinal<number | string, string>();
     // create the rects SVG g container
@@ -97,28 +97,34 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       any,
       Map<any, { parentKey: number; start: number; end: number }>
     >();
+    let xAxisMax = Number.NEGATIVE_INFINITY;
     for (const [k0, v0] of _preprocessed) {
       // sort in descending order
       const entries = [...v0.entries()]
         .sort((a, b) => b[1] - a[1])
         .reduce((acc, [k, v], i) => {
+          let end: number;
           if (i == 0) {
-            acc.push([k, { parentKey: k0, start: 0, end: v }]);
+            end = v;
+            acc.push([k, { parentKey: k0, start: 0, end: end }]);
           } else {
+            end = acc[i - 1][1].end + v;
             acc.push([
               k,
               {
                 parentKey: k0,
                 start: acc[i - 1][1].end,
-                end: acc[i - 1][1].end + v,
+                end: end,
               },
             ]);
           }
+          xAxisMax = Math.max(xAxisMax, end);
           return acc;
         }, new Array<[any, { parentKey: any; start: number; end: number }]>());
       preprocessed.set(k0, new Map(entries));
     }
-    // update x-axis
+    // update x-axis domain and container
+    this.x.domain([0, xAxisMax + Math.floor(xAxisMax * 0.05)]);
     this.svg.select<SVGGElement>("g.x-axis").remove();
     this.svg
       .append("g")
@@ -127,7 +133,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       .call(
         axisTop(this.x)
           .ticks(this.width / 80)
-          .tickFormat(formatPrefix(".1", 1e3)),
+          .tickFormat(formatPrefix(",.0", xAxisMax > 10_000? 10e3: 10e0)),
       )
       .call((g) =>
         g
@@ -151,7 +157,7 @@ class StackedBarChartVisualization extends ResizableVisualzation {
         [...innerGroupKeys.values()].map((v) => this.innerGroupByKeyColor(v)),
       );
     // update the rects
-    this.g
+    const rects = this.g
       .selectAll("g")
       .data(preprocessed)
       .join("g")
@@ -166,7 +172,10 @@ class StackedBarChartVisualization extends ResizableVisualzation {
       .attr("y", ([, v]) => this.y(v.parentKey)!)
       .attr("width", ([, v]) => this.x(v.end) - this.x(v.start))
       .attr("height", this.y.bandwidth())
-      .classed("hoverable", true)
+      .classed("hoverable", true);
+    // tooltip
+    rects.select("title").remove();
+    rects
       .append("title")
       .text(
         ([k, v]) =>
@@ -180,10 +189,6 @@ class StackedBarChartVisualization extends ResizableVisualzation {
     this.y.range([this.margins.top, this.height - this.margins.bottom]);
     // call update again if there is data currently visualized
     if (this.currentData) this.update(this.currentData);
-  }
-
-  public setXAxisMax(m: number): void {
-    this.x.domain([0, m]);
   }
 }
 

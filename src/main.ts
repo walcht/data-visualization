@@ -107,28 +107,24 @@ if (!lineChartContainer) {
 ///////////////////////////////////////////////////////////////////////////////
 /////////////////////////// Visualizations Pool ///////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
-// a pool of visualizations that are going to be updated by the DatePlayer
-const pool = [
-  new MapVisualization(mapContainer),
-  new StackedBarChartVisualization(
+const mapVisualization = new MapVisualization(mapContainer);
+const stackedBarChartVisualization00 =  new StackedBarChartVisualization(
     barChartContainer00,
     (d) => d.speedLimit,
     Object.values(SpeedLimit).filter((d) => !Number.isNaN(Number(d))),
     (k: SpeedLimit) => SpeedLimit[k].replace("_", " ").toLowerCase(),
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-    150_000,
-  ),
-  new StackedBarChartVisualization(
+  );
+ const stackedBarChartVisualization01 = new StackedBarChartVisualization(
     barChartContainer01,
     (d) => d.roadType,
     Object.values(RoadType).filter((d) => !Number.isNaN(Number(d))),
     (k: RoadType) => RoadType[k].replace("_", " ").toLowerCase(),
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-    150_000,
-  ),
-  new StackedBarChartVisualization(
+  );
+ const stackedBarChartVisualization02 = new StackedBarChartVisualization(
     barChartContainer02,
     (d) => d.roadSurfaceConditions,
     Object.values(RoadSurfaceConditions).filter(
@@ -138,9 +134,8 @@ const pool = [
       RoadSurfaceConditions[k].replace("_", " ").toLowerCase(),
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-    150_000,
-  ),
-  new StackedBarChartVisualization(
+  );
+ const stackedBarChartVisualization03 = new StackedBarChartVisualization(
     barChartContainer03,
     (d) => d.weatherConditions,
     Object.values(WeatherConditions).filter((d) => !Number.isNaN(Number(d))),
@@ -148,9 +143,7 @@ const pool = [
       WeatherConditions[k].replace("_", " ").toLowerCase(),
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
-    150_000,
-  ),
-];
+  );
 const lineChartVisualization = new LineChartVisualization(lineChartContainer);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -174,9 +167,16 @@ importBtn.addEventListener("click", async () => {
 });
 // listen to date update events dispatched by the DatePlayer
 document.addEventListener("date-update", (e: any) => {
-  pool.forEach((v) => v.update(e.detail.data));
+  mapVisualization.update(e.detail.data);
 });
 // listen to day selection event dispatched by calendar visualization
 document.addEventListener("dayselectionevent", (e: any) => {
   lineChartVisualization.update(e.detail.data);
+});
+// listen to map (de)selection events and update stacked bar charts accordingly
+document.addEventListener("map-selection-update", (e: any) => {
+  stackedBarChartVisualization00.update(e.detail.data);
+  stackedBarChartVisualization01.update(e.detail.data);
+  stackedBarChartVisualization02.update(e.detail.data);
+  stackedBarChartVisualization03.update(e.detail.data);
 });
