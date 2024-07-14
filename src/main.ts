@@ -11,6 +11,7 @@ import {
 import { DatePlayer } from "./core/DatePlayer";
 import { CalendarVisualization } from "./visualizations/CalendarVisualization";
 import { LineChartVisualization } from "./visualizations/LinechartVisualization";
+import { sum } from "d3-array";
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////// QUERIES ////////////////////////////////////
@@ -144,7 +145,7 @@ const stackedBarChartVisualization00 =  new StackedBarChartVisualization(
     (d) => d.accidentSeverity,
     (k: AccidentSeverity) => ["#ffdd59", "#ffa801", "#ff3f34"][k - 1],
   );
-const lineChartVisualization = new LineChartVisualization(lineChartContainer);
+const lineChartVisualization = new LineChartVisualization(lineChartContainer, (data) => sum(data, (d) => d.nbrOfCasualties), "nbr of casualties");
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Event Listeners /////////////////////////////////

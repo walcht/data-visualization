@@ -1,23 +1,29 @@
 import { Selection, create } from "d3-selection";
 import { ResizableVisualzation } from "../core/ResizableVisualization";
 import { AccidentData } from "../interfaces/AccidentData";
-import { ScaleLinear, scaleLinear, ScaleTime, scaleUtc } from "d3-scale";
+import {
+  ScaleLinear,
+  scaleLinear,
+  ScalePower,
+  scaleSqrt,
+  ScaleTime,
+  scaleUtc,
+} from "d3-scale";
 import { axisBottom, axisLeft } from "d3-axis";
 import { group } from "d3-array";
 import { utcDay, utcHour } from "d3-time";
 import { utcFormat } from "d3-time-format";
 import { curveStepAfter, line } from "d3-shape";
 
-/**
- * Creates a line + scatterplot visualization to reflect hourly-based distribution
- * of data
- */
 class LineChartVisualization extends ResizableVisualzation {
   private readonly svg: Selection<SVGSVGElement, undefined, null, undefined>;
   private readonly path: Selection<SVGPathElement, undefined, null, undefined>;
   private readonly g: Selection<SVGGElement, undefined, null, undefined>;
   private readonly x: ScaleTime<number, number>;
   private readonly y: ScaleLinear<number, number>;
+  private readonly radius: ScalePower<number, number>;
+  private readonly sum: (d: AccidentData[]) => number;
+  private readonly sumName: string;
 
   private currentData: AccidentData[] | undefined = undefined;
 
@@ -34,15 +40,28 @@ class LineChartVisualization extends ResizableVisualzation {
   };
 
   /**
+   * Creates a line + scatterplot visualization to reflect hourly-based distribution
+   * of data
+   *
    * @param container HTML container where the SVG is going to be appended to
+   *
+   * @param sum summing function to be used for scatterplot radius
+   *
+   * @param sumName summing name to be used for the tooltips
    */
-  public constructor(container: HTMLDivElement) {
+  public constructor(
+    container: HTMLDivElement,
+    sum: (d: AccidentData[]) => number,
+    sumName: string,
+  ) {
     super(container);
     this.svg = create("svg").attr("width", "100%").attr("height", "100%");
+    this.sum = sum;
+    this.sumName = sumName;
     this.path = this.svg
       .append("path")
       .attr("fill", "none")
-      .attr("stroke", "steelblue")
+      .attr("stroke", "#e84118")
       .attr("stroke-width", 1.5);
     this.g = this.svg
       .append("g")
@@ -50,11 +69,13 @@ class LineChartVisualization extends ResizableVisualzation {
       .attr("stroke-opacity", 0.2);
     this.x = scaleUtc();
     this.y = scaleLinear();
+    this.radius = scaleSqrt().range([2, 8]);
     this.container.append(this.svg.node()!);
   }
 
   /**
    * Updates the visualization to reflect the provided data
+   * 
    * @param data AccidentsData array
    */
   public update(data: AccidentData[]) {
@@ -71,8 +92,10 @@ class LineChartVisualization extends ResizableVisualzation {
       hourlyGrouped.set(hour, tmp.get(hour)!);
     });
     let hourlyMax = Number.NEGATIVE_INFINITY;
+    let maxSum = Number.NEGATIVE_INFINITY;
     hourlyGrouped.forEach((v) => {
       hourlyMax = Math.max(hourlyMax, v.length);
+      maxSum = Math.max(maxSum, this.sum(v));
     });
     // update X axis contain
     this.x.domain([hours[0], hours[hours.length - 1]]);
@@ -106,6 +129,8 @@ class LineChartVisualization extends ResizableVisualzation {
           .attr("y", 15)
           .text("↑ Number Accidents"),
       );
+    // update radius scale domain
+    this.radius.domain([0, maxSum]);
     // update path
     const orderedPoints = new Array<[number, number]>();
     hourlyGrouped.forEach((v, hour) => {
@@ -118,20 +143,23 @@ class LineChartVisualization extends ResizableVisualzation {
       .curve(curveStepAfter);
     this.path.attr("d", l(orderedPoints));
     // update dots
-    this.g
+    const dots = this.g
       .selectAll("circle")
       .data(hourlyGrouped)
       .join("circle")
       .attr("cx", ([hour]) => this.x(hour))
       .attr("cy", ([, v]) => this.y(v.length))
       .attr("fill", "white")
-      .attr("r", 2.5)
+      .attr("r", ([, v]) => this.radius(this.sum(v)));
+    // tooltips update
+    dots.select("title").remove();
+    dots
       .append("title")
       .text(
         ([hour, v]) =>
           `hour: ${utcFormat("%H:%M")(hour)}\nday: ${utcFormat("%B %d, %Y")(
             hour,
-          )}\naccidents: ${v.length}`,
+          )}\naccidents: ${v.length}\n${this.sumName}: ${this.sum(v)}`,
       );
   }
 
