@@ -10,6 +10,11 @@ import {
   WeatherConditions,
 } from "../interfaces/AccidentData";
 
+/**
+ * Parses the CSV UK accidents dataset
+ * 
+ * @param dataset UK accidents dataset input .csv file
+ */
 async function datasetImporter(dataset: File): Promise<Array<AccidentData>> {
   const res = new Array<AccidentData>();
   const textContent = await dataset.text();

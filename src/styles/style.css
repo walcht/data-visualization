@@ -48,6 +48,7 @@ body {
 }
 
 #map-container {
+  position: relative;
   flex-grow: 9;
 }
 
@@ -118,8 +119,6 @@ button {
   cursor: pointer;
   display: inline-block;
   font-family: sans-serif;
-  line-height: 20px;
-  padding: 0 10px 0 11px;
   position: relative;
   text-align: center;
   text-decoration: none;
@@ -138,4 +137,23 @@ button:hover {
 
 button:focus {
   border-color: #0c76cc;
+}
+
+#brush-toggle {
+  font-size: 0.85em;
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 35px;
+  height: 35px;
+}
+
+.brush-enabled {
+  background-color: rgb(38, 38, 38);
+  color: #dcdde1;
+}
+
+.brush-disabled {
+  background-color: rgb(38, 38, 38);
+  color: #dcdde1;
 }

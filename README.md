@@ -53,7 +53,7 @@ and the visualization channels used for this map:
 | Feature(s)            | Visualization Channel |
 | --------------------- | --------------------- |
 | [longitude, latitude] | location              |
-| *Number_of_Accidents  | hexagon radius        |
+| *Number_of_Accidents  | hexagon/circle radius |
 | Number_of_Casualties  | color intensity       |
 
 *Number_of_Accidents is extracted from the input data and does not exist on its own as an actual provided feature.

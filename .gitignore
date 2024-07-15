@@ -14,3 +14,5 @@ node_modules/
 
 # raw datasets (too large)
 *.csv
+
+/docs

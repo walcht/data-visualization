@@ -12,6 +12,7 @@ import { DatePlayer } from "./core/DatePlayer";
 import { CalendarVisualization } from "./visualizations/CalendarVisualization";
 import { LineChartVisualization } from "./visualizations/LinechartVisualization";
 import { sum } from "d3-array";
+import { BrushToggleGUI } from "./guis";
 
 ///////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////// QUERIES ////////////////////////////////////
@@ -150,6 +151,11 @@ const lineChartVisualization = new LineChartVisualization(
 );
 
 ///////////////////////////////////////////////////////////////////////////////
+////////////////////////////////// GUIs ///////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+new BrushToggleGUI(mapContainer);
+
+///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////// Event Listeners /////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////
 importBtn.addEventListener("click", async () => {
@@ -182,4 +188,9 @@ document.addEventListener("map-selection-update", (e: any) => {
   stackedBarChartVisualization01.update(e.detail.data);
   stackedBarChartVisualization02.update(e.detail.data);
   stackedBarChartVisualization03.update(e.detail.data);
+});
+document.addEventListener("brush-toggle", (e: any) => {
+  e.detail.enabled
+    ? mapVisualization.enableZoom()
+    : mapVisualization.disableZoom();
 });

@@ -34,8 +34,8 @@ class LineChartVisualization extends ResizableVisualzation {
     left: number;
   } = {
     top: 30,
-    right: 20,
-    bottom: 40,
+    right: 30,
+    bottom: 50,
     left: 80,
   };
 
@@ -75,7 +75,7 @@ class LineChartVisualization extends ResizableVisualzation {
 
   /**
    * Updates the visualization to reflect the provided data
-   * 
+   *
    * @param data AccidentsData array
    */
   public update(data: AccidentData[]) {
@@ -104,7 +104,7 @@ class LineChartVisualization extends ResizableVisualzation {
       .append("g")
       .attr("class", "x-axis")
       .attr("transform", `translate(0,${this.height - this.margins.bottom})`)
-      .call(axisBottom(this.x).tickFormat(utcFormat("%H") as any))
+      .call(axisBottom(this.x).ticks(24).tickFormat(utcFormat("%H:00") as any))
       .call((g) =>
         g
           .append("text")
@@ -112,6 +112,13 @@ class LineChartVisualization extends ResizableVisualzation {
           .attr("x", this.width - this.margins.right)
           .attr("y", this.margins.bottom - 15)
           .text("→ Day Hour"),
+      )
+      .call((g) =>
+        g
+          .selectAll(".tick line")
+          .clone()
+          .attr("y2", -this.height + this.margins.bottom + this.margins.top)
+          .attr("stroke-opacity", 0.1),
       );
     // update Y axis domain and y axis container
     this.y.domain([0, hourlyMax]);
@@ -149,7 +156,7 @@ class LineChartVisualization extends ResizableVisualzation {
       .join("circle")
       .attr("cx", ([hour]) => this.x(hour))
       .attr("cy", ([, v]) => this.y(v.length))
-      .attr("fill", "white")
+      .attr("fill", "#e1b12c")
       .attr("r", ([, v]) => this.radius(this.sum(v)));
     // tooltips update
     dots.select("title").remove();

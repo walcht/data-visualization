@@ -94,7 +94,13 @@ enum CarriagewayHazards {
 }
 
 interface AccidentData {
+  /**
+   * longitude in WGS84 in `degrees`
+   */
   longitude: number;
+  /**
+   * latitude in WGS84 in `degrees`
+   */
   latitude: number;
   accidentSeverity: AccidentSeverity;
   nbrOfVehicles: number;

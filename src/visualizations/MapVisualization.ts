@@ -162,11 +162,6 @@ class MapVisualization extends ResizableVisualzation {
     this.container.append(this.svg.node()!);
     // create brushing behaviour
     this.brush = brush().on("end", this.onBrush.bind(this));
-    window.addEventListener("keypress", (e) => {
-      if (e.key == "Control") return;
-      if (e.key == "b")
-        this.zoomEnabled ? this.disableZoom() : this.enableZoom();
-    });
   }
 
   /**
